@@ -1,0 +1,41 @@
+https://www.mongodb.com/community/forums/t/start-mongodb-server-and-connect-to-it-using-command-line-tools-only-mongod-exe-and-mongos-exe-for-windows/234483
+
+mongod.exe --dbpath=".\data\db"
+
+to start the server
+
+then
+
+mongosh "mongodb://localhost:27017"
+
+to connect
+
+Tutorial is here: https://www.mongodb.com/docs/mongodb-shell/
+
+then
+use mydatabase;
+
+Write the script testinsert.js with content
+
+db.movies.insertOne(
+    {
+      title: "The Favourite",
+      genres: [ "Drama", "History" ],
+      runtime: 121,
+      rated: "R",
+      year: 2018,
+      directors: [ "Yorgos Lanthimos" ],
+      cast: [ "Olivia Colman", "Emma Stone", "Rachel Weisz" ],
+      type: "movie"
+    }
+  )
+
+  then
+  load("testinsert.js");
+
+  then
+  db.movies.find();
+
+  Tutorial on how to work with TypeScript and mongodb
+  
+  https://www.mongodb.com/resources/products/compatibilities/using-typescript-with-mongodb-tutorial

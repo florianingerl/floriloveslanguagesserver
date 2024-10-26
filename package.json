@@ -1,0 +1,47 @@
+{
+  "name": "node-js-crud-sql-server",
+  "version": "1.0.0",
+  "description": "Node.js CRUD example with Mongodb",
+  "main": "server.ts",
+  "scripts": {
+    "start": "ts-node server.ts",
+    "dev": "nodemon --exec ts-node server.ts",
+    "build": "tsc ",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "node js",
+    "mongodb",
+    "mssql",
+    "crud",
+    "express",
+    "sequelize",
+    "rest api"
+  ],
+  "author": "nekagit",
+  "license": "ISC",
+  "dependencies": {
+    "@netlify/functions": "^2.6.0",
+    "axios": "^1.6.7",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "date-fns": "^3.6.0",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.1.1",
+    "nodemon": "^3.1.0",
+    "sequelize": "^6.28.0",
+    "serverless-http": "^3.2.0",
+    "tedious": "^19.0.0",
+    "typescript": "^5.6.2"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/mongodb": "^4.0.6",
+    "@types/passport": "^1.0.16",
+    "ts-node": "^10.9.2"
+  }
+}
