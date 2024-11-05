@@ -59,6 +59,7 @@ export const getUserById = async (
   }
 };
 
+
 export const updateUser = async (
   req: AuthenticatedRequest,
   res: Response

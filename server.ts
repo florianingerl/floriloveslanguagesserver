@@ -5,7 +5,6 @@ import routes from "./routes";
 import dbConfig from "./src/config/db.config";
 import testDB from "./src/helpers/testDB";
 import initDB from "./src/helpers/initDB";
-import consistencyDB from "./src/helpers/consistencyDB";
 
 interface CorsOptions {
   origin: string;
@@ -29,7 +28,8 @@ async function run(): Promise<void> {
   } catch (err) {
     console.error("Error in run function:", (err as Error).stack);
   } finally {
-    // const db = client.db("nekaGit");
+    //const db = client.db("test");
+    //console.log("I have connected to the test database!");
     // await db.dropDatabase();
     await client.close();
     console.log("MongoDB client closed");
@@ -42,6 +42,5 @@ run().catch(console.error);
 app.listen(8080, async () => {
   // await testDB();
   // await initDB();
-  // await consistencyDB()
   console.log(`Server is running on port ${8080}`);
 });

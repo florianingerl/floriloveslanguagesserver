@@ -9,7 +9,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["**/*.ts", "**/*.d.ts"],
+  "include": ["**/*.ts", "**/*.d.ts", "googletranslatetest.js"],
   "typeRoots": ["./src/types", "./node_modules/@types"],
   "exclude": ["node_modules", "dist"]
 }
