@@ -9,6 +9,9 @@
     "axiostest": "ts-node axiostest.ts",
     "axiosgetAllUsersTest": "ts-node getAllUsersTest.ts",
     "googletranslatetest": "node googletranslatetest.js",
+    "axiosRegisterUserTest": "ts-node registerusertest.ts",
+    "axiosLoginUserTest": "ts-node LoginUserTest.ts",
+    "axiosGetLoggedInUserTest": "ts-node GetLoggedInUserTest.ts",
     "dev": "nodemon --exec ts-node server.ts",
     "build": "tsc ",
     "test": "echo \"Error: no test specified\" && exit 1"
