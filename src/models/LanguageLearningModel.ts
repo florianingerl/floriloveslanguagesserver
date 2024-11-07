@@ -8,12 +8,6 @@ export enum UserRole {
   Admin = "Admin",
 }
 
-export enum ETimeEntry {
-  work = "work",
-  project = "project",
-  pause = "pause",
-}
-
 // Base interface for all models
 export interface IBaseModel {
   _id: string;

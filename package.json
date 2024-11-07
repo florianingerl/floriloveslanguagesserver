@@ -12,6 +12,7 @@
     "axiosRegisterUserTest": "ts-node registerusertest.ts",
     "axiosLoginUserTest": "ts-node LoginUserTest.ts",
     "axiosGetLoggedInUserTest": "ts-node GetLoggedInUserTest.ts",
+    "test10" : "ts-node mongoconnecttestonline.ts",
     "dev": "nodemon --exec ts-node server.ts",
     "build": "tsc ",
     "test": "echo \"Error: no test specified\" && exit 1"
