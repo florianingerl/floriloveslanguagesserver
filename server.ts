@@ -5,6 +5,7 @@ import routes from "./routes";
 import dbConfig from "./src/config/db.config";
 import testDB from "./src/helpers/testDB";
 import initDB from "./src/helpers/initDB";
+import { Request, Response} from "express";
 
 interface CorsOptions {
   origin: string;

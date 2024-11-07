@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = __importDefault(require("axios"));
 const client = axios_1.default.create({
-    baseURL: 'http://bdb85288cb03:3000',
+    baseURL: 'https://jagged-far-radium.glitch.me',
 });
 (() => __awaiter(void 0, void 0, void 0, function* () {
     const config = {

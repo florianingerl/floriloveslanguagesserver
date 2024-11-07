@@ -1,5 +1,6 @@
 import express from "express";
 import { AuthController } from "./src/controllers/TimeIT/AuthController";
+import { Request, Response } from "express";
 
 import {
   createUser,
@@ -21,6 +22,12 @@ router.get(
   AuthController.getAuthenticatedUser
 );
 
+router.get("/amen", async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+   res.status(201).json( { message: "This is the amen endpoint !"});
+});
 // User routes
 router.post("/api/user", createUser);
 router.get("/api/user", getAllUsers);

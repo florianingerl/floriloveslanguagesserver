@@ -1,7 +1,7 @@
 import axios, { AxiosResponse, AxiosRequestConfig, RawAxiosRequestHeaders } from 'axios';
 
 const client = axios.create({
-  baseURL: 'http://bdb85288cb03:3000',
+  baseURL: 'https://jagged-far-radium.glitch.me',
 });
 
 
