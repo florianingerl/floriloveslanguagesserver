@@ -27,7 +27,7 @@ run().catch(err => console.log(err));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         // 4. Connect to MongoDB
-        yield (0, mongoose_1.connect)('mongodb+srv://imelflorianingerl:<Yogananda9>@cluster0.s8sclhk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0');
+        yield (0, mongoose_1.connect)('mongodb+srv://flori:ABC@cluster0.p9bpe.mongodb.net/');
         const user = new User({
             name: 'Bill',
             email: 'bill@initech.com',

@@ -22,6 +22,7 @@ router.post("/api/register", AuthController_1.AuthController.register);
 router.post("/api/login", AuthController_1.AuthController.login);
 router.get("/api/auth/user", authMiddleware_1.default, AuthController_1.AuthController.getAuthenticatedUser);
 router.get("/amen", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("The amen endpoint was called!");
     res.status(201).json({ message: "This is the amen endpoint !" });
 }));
 // User routes
