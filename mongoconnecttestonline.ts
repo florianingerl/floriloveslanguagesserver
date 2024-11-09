@@ -31,7 +31,7 @@ run().catch(err => console.log(err));
 
 async function run() {
   // 4. Connect to MongoDB
-  await connect('mongodb+srv://imelflorianingerl:<Yogananda9>@cluster0.s8sclhk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0');
+  await connect('mongodb+srv://flori:ABC@cluster0.p9bpe.mongodb.net/');
 
   const user = new User({
     name: 'Bill',

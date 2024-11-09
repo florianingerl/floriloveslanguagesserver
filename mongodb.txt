@@ -1,5 +1,10 @@
 https://www.mongodb.com/community/forums/t/start-mongodb-server-and-connect-to-it-using-command-line-tools-only-mongod-exe-and-mongos-exe-for-windows/234483
 
+I have created a new user with name flori and password ABC.
+This is how to connect with mongosh:
+
+mongosh "mongodb+srv://flori:ABC@cluster0.p9bpe.mongodb.net/"
+
 mongod.exe --dbpath=".\data\db"
 
 to start the server

@@ -26,6 +26,7 @@ router.get("/amen", async (
   req: Request,
   res: Response
 ): Promise<void> => {
+   console.log("The amen endpoint was called!");
    res.status(201).json( { message: "This is the amen endpoint !"});
 });
 // User routes
