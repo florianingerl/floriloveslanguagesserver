@@ -15,7 +15,12 @@ const AuthController = {
   // Register a new user
   async register(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
+      console.log("Register was called!");
       const { name, email, password } = req.body;
+      console.log(`Email is ${email}`);
+      console.log(`Password is ${password}`);
+
+      console.log( req.body );
 
       // Check if the user already exists
       const existingUser = await User.findOne({ email });
@@ -58,10 +63,15 @@ const AuthController = {
   // Log in a user
   async login(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
+      console.log("Login endpoint was called!");
       const { email, password } = req.body;
+      console.log(`Email is ${email}`);
+      console.log(`Password is ${password}`);
+      console.log( req.body );
 
       // Check if the user exists
       const user = await User.findOne({ email });
+      console.log("The user wasn't found!");
       if (!user) {
         res.status(400).json({ message: "User does not exist" });
         return;
