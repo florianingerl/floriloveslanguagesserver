@@ -12,7 +12,7 @@
     "axiosRegisterUserTest": "ts-node registerusertest.ts",
     "axiosLoginUserTest": "ts-node LoginUserTest.ts",
     "axiosGetLoggedInUserTest": "ts-node GetLoggedInUserTest.ts",
-    "test10" : "ts-node mongoconnecttestonline.ts",
+    "test10": "ts-node mongoconnecttestonline.ts",
     "dev": "nodemon --exec ts-node server.ts",
     "build": "tsc ",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -31,14 +31,12 @@
   "dependencies": {
     "@netlify/functions": "^2.6.0",
     "@types/axios": "^0.14.4",
-    "@types/google-translate-api": "^2.3.5",
     "@types/mongoose": "^5.11.97",
     "axios": "^1.7.7",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "date-fns": "^3.6.0",
     "express": "^4.21.0",
-    "google-translate-api": "^2.3.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.0",
     "nodemon": "^3.1.0",

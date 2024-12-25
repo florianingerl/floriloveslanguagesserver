@@ -9,6 +9,15 @@ import {
   getUserById,
   updateUser,
 } from "./src/controllers/TimeIT/UserController";
+
+import {
+  createDict,
+  createDictPref,
+  updateDictPref,
+  getDictPrefByEmailAndLg,
+} from "./src/controllers/TimeIT/DictController";
+
+
 import authMiddleware from "./src/middleware/authMiddleware";
 
 const router = express.Router();
@@ -35,5 +44,7 @@ router.get("/api/user", getAllUsers);
 router.get("/api/user/:id", getUserById);
 router.put("/api/user/:id", updateUser);
 router.delete("/api/user/:id", deleteUser);
+router.post("/api/dict", createDict );
+router.post("/api/dictprefbymailandlg", getDictPrefByEmailAndLg);
 
 export default router;

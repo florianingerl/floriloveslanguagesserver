@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.User = exports.UserRole = void 0;
+exports.DictPref = exports.Dict = exports.User = exports.UserRole = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const db_config_1 = __importDefault(require("../config/db.config"));
 const connection = mongoose_1.default.createConnection(db_config_1.default.URL);
@@ -35,6 +35,21 @@ var UserRole;
     UserRole["User"] = "User";
     UserRole["Admin"] = "Admin";
 })(UserRole || (exports.UserRole = UserRole = {}));
+;
+;
+const DictPrefSchema = new mongoose_1.Schema({
+    dictUrl: { type: String, required: true },
+    userEmail: { type: String, required: true },
+    lg: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
+});
+const DictSchema = new mongoose_1.Schema({
+    name: { type: String, required: true },
+    url: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
+});
 // User Schema
 const UserSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
@@ -49,3 +64,7 @@ const UserSchema = new mongoose_1.Schema({
 // Export the models
 const User = connection.model("User", UserSchema);
 exports.User = User;
+const Dict = connection.model("Dict", DictSchema);
+exports.Dict = Dict;
+const DictPref = connection.model("DictPref", DictPrefSchema);
+exports.DictPref = DictPref;

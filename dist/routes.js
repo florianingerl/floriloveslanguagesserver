@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const AuthController_1 = require("./src/controllers/TimeIT/AuthController");
 const UserController_1 = require("./src/controllers/TimeIT/UserController");
+const DictController_1 = require("./src/controllers/TimeIT/DictController");
 const authMiddleware_1 = __importDefault(require("./src/middleware/authMiddleware"));
 const router = express_1.default.Router();
 // Auth routes
@@ -31,4 +32,6 @@ router.get("/api/user", UserController_1.getAllUsers);
 router.get("/api/user/:id", UserController_1.getUserById);
 router.put("/api/user/:id", UserController_1.updateUser);
 router.delete("/api/user/:id", UserController_1.deleteUser);
+router.post("/api/dict", DictController_1.createDict);
+router.post("/api/dictprefbymailandlg", DictController_1.getDictPrefByEmailAndLg);
 exports.default = router;

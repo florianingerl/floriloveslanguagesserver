@@ -22,7 +22,11 @@ const AuthController = {
     register(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                console.log("Register was called!");
                 const { name, email, password } = req.body;
+                console.log(`Email is ${email}`);
+                console.log(`Password is ${password}`);
+                console.log(req.body);
                 // Check if the user already exists
                 const existingUser = yield LanguageLearningModel_1.User.findOne({ email });
                 if (existingUser) {
@@ -62,9 +66,14 @@ const AuthController = {
     login(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                console.log("Login endpoint was called!");
                 const { email, password } = req.body;
+                console.log(`Email is ${email}`);
+                console.log(`Password is ${password}`);
+                console.log(req.body);
                 // Check if the user exists
                 const user = yield LanguageLearningModel_1.User.findOne({ email });
+                console.log("The user wasn't found!");
                 if (!user) {
                     res.status(400).json({ message: "User does not exist" });
                     return;

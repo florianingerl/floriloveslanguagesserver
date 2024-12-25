@@ -1,0 +1,36 @@
+
+RasberryPi
+
+Hostname: 
+raspberrypi4
+Nutzername:
+flori10
+Passwort:
+Yogananda9!
+
+Ipv4: 192.168.178.21
+Connect:
+Console öffnen
+Dann ssh flori10@raspberrypi4
+Dann richtiges Passwort eingeben
+
+Wichtige Befehle:
+ls = Shows content of directory
+ls -h mit Zusatzinfos
+remove
+cd 
+scp = remote copy
+cp = copy
+
+skdfjsldf
+.skdfjsldf
+ksfj
+.dfk
+
+scp -r . flori10@raspberrypi4:~
+
+rm -r * = In diesem Verzeichnis alle löschen
+ls -la = Zeigt auch die versteckten Dateien an
+
+sudo apt update = Aktualisiert die Infos über die Packete
+sudo apt upgrade = installiert dann die Upgrades
