@@ -34,3 +34,22 @@ ls -la = Zeigt auch die versteckten Dateien an
 
 sudo apt update = Aktualisiert die Infos über die Packete
 sudo apt upgrade = installiert dann die Upgrades
+
+sudo shutdown now
+
+ip -6 a s
+
+Server detached starten
+
+tmux 
+Dann
+npm run start & dann Enter damit man wieder die Eingabezeile sieht
+Dann
+tmux detach
+
+Detached Process wieder beenden:
+killall node
+oder
+kill 4677 (Das ist die ProzessId)
+
+

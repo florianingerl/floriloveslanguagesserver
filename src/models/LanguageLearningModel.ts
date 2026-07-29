@@ -26,6 +26,36 @@ export interface IUser extends IBaseModel {
   isAdmin: boolean;
 }
 
+export interface IDict extends IBaseModel {
+   name: string;
+   url: string;
+};
+
+export interface IDictPref extends IBaseModel {
+   dict: Schema.Types.ObjectId;
+   dictUrl: string;
+   userEmail : string;
+   lg: string;
+};
+
+const DictPrefSchema : Schema = new Schema({
+  dict: { type: Schema.Types.ObjectId, ref: 'Dict' },
+  dictUrl: { type: String, required: true },
+  user: { type: Schema.Types.ObjectId, ref: 'User'},
+  userEmail: { type: String, required: true },
+  lg: { type: String, required: true, enum: ['french', 'english', 'deutsch', 'espagnol','italiano'] },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+const DictSchema : Schema = new Schema({
+  name: { type: String, required: true },
+  url: { type: String, required: true },
+
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
 // User Schema
 const UserSchema: Schema = new Schema({
   name: { type: String, required: true },
@@ -40,6 +70,8 @@ const UserSchema: Schema = new Schema({
 
 // Export the models
 const User: Model<IUser> = connection.model<IUser>("User", UserSchema);
+const Dict: Model<IDict> = connection.model<IDict>("Dict", DictSchema);
+const DictPref : Model<IDictPref> = connection.model<IDictPref>("DictPref", DictPrefSchema );
 
 
-export { User };
+export { User, Dict, DictPref };

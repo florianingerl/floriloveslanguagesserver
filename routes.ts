@@ -13,7 +13,7 @@ import {
 import {
   createDict,
   createDictPref,
-  updateDictPref,
+  updateOrCreateDictPref,
   getDictPrefByEmailAndLg,
 } from "./src/controllers/TimeIT/DictController";
 
@@ -46,5 +46,7 @@ router.put("/api/user/:id", updateUser);
 router.delete("/api/user/:id", deleteUser);
 router.post("/api/dict", createDict );
 router.post("/api/dictprefbymailandlg", getDictPrefByEmailAndLg);
+router.post("/api/createDictionaryPref", createDictPref );
+router.post("/api/updateOrCreateDictionaryPref", updateOrCreateDictPref );
 
 export default router;

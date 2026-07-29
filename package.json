@@ -12,8 +12,12 @@
     "axiosRegisterUserTest": "ts-node registerusertest.ts",
     "axiosLoginUserTest": "ts-node LoginUserTest.ts",
     "axiosGetLoggedInUserTest": "ts-node GetLoggedInUserTest.ts",
+    "createdictpreftest": "ts-node CreateDictPref.ts",
+    "createdictpreftest2": "ts-node CreateDictPref2.ts",
+    "getdictpreftest": "ts-node GetDicPref.ts",
     "test10": "ts-node mongoconnecttestonline.ts",
-    "dev": "nodemon --exec ts-node server.ts",
+    "dev": "nodemon --watch . --ext ts --exec ts-node server.ts"
+,
     "build": "tsc ",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
