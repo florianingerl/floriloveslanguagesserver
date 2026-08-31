@@ -11,9 +11,17 @@ import {
 } from "./src/controllers/TimeIT/UserController";
 
 import {
+  createExercise,
+  deleteExercise,
+  getAllExercises,
+  getExerciseById,
+  updateExercise,
+} from "./src/controllers/TimeIT/ExerciseController";
+
+import {
   createDict,
   createDictPref,
-  updateOrCreateDictPref,
+  //updateOrCreateDictPref,
   getDictPrefByEmailAndLg,
 } from "./src/controllers/TimeIT/DictController";
 
@@ -39,6 +47,11 @@ router.get("/amen", async (
    res.status(201).json( { message: "This is the amen endpoint !"});
 });
 // User routes
+router.post("/api/exercise", createExercise);
+router.get("/api/exercise", getAllExercises );
+router.get("/api/exercise/:id", getExerciseById);
+router.put("/api/exercise/:id", updateExercise);
+router.delete("/api/exercise/:id", deleteExercise);
 router.post("/api/user", createUser);
 router.get("/api/user", getAllUsers);
 router.get("/api/user/:id", getUserById);
@@ -47,6 +60,6 @@ router.delete("/api/user/:id", deleteUser);
 router.post("/api/dict", createDict );
 router.post("/api/dictprefbymailandlg", getDictPrefByEmailAndLg);
 router.post("/api/createDictionaryPref", createDictPref );
-router.post("/api/updateOrCreateDictionaryPref", updateOrCreateDictPref );
+//router.post("/api/updateOrCreateDictionaryPref", updateOrCreateDictPref );
 
 export default router;

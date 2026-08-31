@@ -19,6 +19,15 @@ export interface IBaseModel {
   updatedAt: Date;
 }
 
+export interface IExercise extends IBaseModel {
+  instruction: string;
+  imageUrl: string,
+  topics: [string];
+  type: string;
+  gapText: string;
+  options: [string];
+}
+
 export interface IUser extends IBaseModel {
   email: string;
   password: string;
@@ -56,6 +65,19 @@ const DictSchema : Schema = new Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
+const ExerciseSchema: Schema = new Schema({
+  instruction: {type: String, required: true },
+  imageUrl: {type: String, required: true},
+   topics: {type: [String], required: true},
+   type: {type: String, required: true},
+   gapText: {type: String, required: false},
+   options: {type: [String], required: false},
+   createdAt: { type: Date, default: Date.now },
+   updatedAt: { type: Date, default: Date.now },
+}
+
+);
+
 // User Schema
 const UserSchema: Schema = new Schema({
   name: { type: String, required: true },
@@ -68,10 +90,13 @@ const UserSchema: Schema = new Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
+
+
 // Export the models
+const Exercise: Model<IExercise> = connection.model<IExercise>("Exercise", ExerciseSchema);
 const User: Model<IUser> = connection.model<IUser>("User", UserSchema);
 const Dict: Model<IDict> = connection.model<IDict>("Dict", DictSchema);
 const DictPref : Model<IDictPref> = connection.model<IDictPref>("DictPref", DictPrefSchema );
 
 
-export { User, Dict, DictPref };
+export { Exercise, User, Dict, DictPref };
