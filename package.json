@@ -8,6 +8,7 @@
     "mongotestconnect": "ts-node mongoconnecttest.ts",
     "axiostest": "ts-node axiostest.ts",
     "createexercisetest": "ts-node CreateExerciseTest.ts",
+    "updateexercisetest": "ts-node UpdateExerciseTest.ts",
     "getallexercisestest": "ts-node GetAllExercisesTest.ts",
     "deleteexercisetest": "ts-node DeleteExerciseTest.ts",
     "axiosgetAllUsersTest": "ts-node getAllUsersTest.ts",
