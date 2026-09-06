@@ -5,6 +5,7 @@
   "main": "server.ts",
   "scripts": {
     "start": "ts-node server.ts",
+    "seed": "ts-node seed.ts",
     "mongotestconnect": "ts-node mongoconnecttest.ts",
     "axiostest": "ts-node axiostest.ts",
     "createexercisetest": "ts-node CreateExerciseTest.ts",

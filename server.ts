@@ -40,7 +40,8 @@ async function run(): Promise<void> {
 
 run().catch(console.error);
 
-app.listen(8080, async () => {
+const PORT = Number(process.env.PORT) || 8080;
+app.listen(PORT, async () => {
   // await testDB();
   // await initDB();
   console.log(`Server is running on port ${8080}`);
