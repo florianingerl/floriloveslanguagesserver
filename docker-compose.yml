@@ -1,0 +1,43 @@
+# Backend und MongoDB. Gleiche Datei lokal und auf dem Server.
+#
+#   docker compose up -d --build
+#   docker compose exec backend node dist/seed.js
+#   docker compose logs -f backend
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: florian-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    mem_limit: 384m
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  backend:
+    build: .
+    container_name: florian-backend
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      MONGODB_URL: mongodb://mongo:27017/test
+      PORT: 8080
+    mem_limit: 256m
+    networks:
+      - default
+      - proxy
+
+volumes:
+  mongo-data:
+
+networks:
+  proxy:
+    external: true
+    name: chrome-stack_default
