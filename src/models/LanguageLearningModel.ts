@@ -19,13 +19,24 @@ export interface IBaseModel {
   updatedAt: Date;
 }
 
+export interface IExerciseOption {
+  option: string;
+  correct: boolean;
+}
+
 export interface IExercise extends IBaseModel {
-  instruction: string;
-  imageUrl: string,
-  topics: [string];
+  quiz: string;
   type: string;
-  gapText: string;
-  options: [string];
+  imageUrl: string;
+  topics?: string[];
+  instruction?: string;
+  gapText?: string;
+  question?: string;
+  questionEn?: string;
+  questionFr?: string;
+  options?: IExerciseOption[];
+  optionsEn?: IExerciseOption[];
+  optionsFr?: IExerciseOption[];
 }
 
 export interface IUser extends IBaseModel {
@@ -36,28 +47,32 @@ export interface IUser extends IBaseModel {
 }
 
 export interface IDict extends IBaseModel {
-   name: string;
-   url: string;
-};
+  name: string;
+  url: string;
+}
 
 export interface IDictPref extends IBaseModel {
-   dict: Schema.Types.ObjectId;
-   dictUrl: string;
-   userEmail : string;
-   lg: string;
-};
+  dict: Schema.Types.ObjectId;
+  dictUrl: string;
+  userEmail: string;
+  lg: string;
+}
 
-const DictPrefSchema : Schema = new Schema({
-  dict: { type: Schema.Types.ObjectId, ref: 'Dict' },
+const DictPrefSchema: Schema = new Schema({
+  dict: { type: Schema.Types.ObjectId, ref: "Dict" },
   dictUrl: { type: String, required: true },
-  user: { type: Schema.Types.ObjectId, ref: 'User'},
+  user: { type: Schema.Types.ObjectId, ref: "User" },
   userEmail: { type: String, required: true },
-  lg: { type: String, required: true, enum: ['french', 'english', 'deutsch', 'espagnol','italiano'] },
+  lg: {
+    type: String,
+    required: true,
+    enum: ["french", "english", "deutsch", "espagnol", "italiano"],
+  },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
 
-const DictSchema : Schema = new Schema({
+const DictSchema: Schema = new Schema({
   name: { type: String, required: true },
   url: { type: String, required: true },
 
@@ -65,18 +80,31 @@ const DictSchema : Schema = new Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-const ExerciseSchema: Schema = new Schema({
-  instruction: {type: String, required: true },
-  imageUrl: {type: String, required: true},
-   topics: {type: [String], required: true},
-   type: {type: String, required: true},
-   gapText: {type: String, required: false},
-   options: {type: [String], required: false},
-   createdAt: { type: Date, default: Date.now },
-   updatedAt: { type: Date, default: Date.now },
-}
-
+const ExerciseOptionSchema: Schema = new Schema(
+  {
+    option: { type: String, required: true },
+    correct: { type: Boolean, required: true },
+  },
+  { _id: false },
 );
+
+const ExerciseSchema: Schema = new Schema({
+  quiz: { type: String, required: true, index: true },
+  type: { type: String, required: true, enum: ["gapText", "multipleChoice"] },
+  imageUrl: { type: String, required: true },
+  topics: { type: [String], required: false },
+  instruction: { type: String, required: false },
+  gapText: { type: String, required: false },
+  question: { type: String, required: false },
+  questionEn: { type: String, required: false },
+  questionFr: { type: String, required: false },
+  options: { type: [ExerciseOptionSchema], required: false },
+  optionsEn: { type: [ExerciseOptionSchema], required: false },
+  optionsFr: { type: [ExerciseOptionSchema], required: false },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
 
 // User Schema
 const UserSchema: Schema = new Schema({

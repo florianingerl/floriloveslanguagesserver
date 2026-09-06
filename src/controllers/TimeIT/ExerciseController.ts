@@ -26,7 +26,9 @@ export const getAllExercises = async (
   res: Response
 ): Promise<void> => {
   try {
-    const exercises = await Exercise.find();
+    const filter =
+      typeof req.query.quiz === "string" ? { quiz: req.query.quiz } : {};
+    const exercises = await Exercise.find(filter);
     res.json(exercises);
   } catch (error) {
     if (error instanceof Error) {
