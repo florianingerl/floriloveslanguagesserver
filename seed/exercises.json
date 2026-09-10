@@ -11090,5 +11090,173 @@
         "correct": true
       }
     ]
+  },
+  {
+    "topics": [
+      "Who or what"
+    ],
+    "instruction": "Conjugate the verb to be !",
+    "type": "multipleChoice",
+    "imageUrl": "https://static.klipy.com/ii/4e7bea9f7a3371424e6c16ebc93252fe/d0/8d/CLziaZ2mV28uUhflLcq.jpg",
+    "question": "_____ is from Pakistan ?  - Keideasum.",
+    "options": [
+      {
+        "option": "Who",
+        "correct": true
+      },
+      {
+        "option": "What",
+        "correct": false
+      }
+    ],
+    "quiz": "english"
+  },
+  {
+    "topics": [
+      "Who or what"
+    ],
+    "instruction": "Conjugate the verb to be !",
+    "type": "multipleChoice",
+    "imageUrl": "https://static.klipy.com/ii/4e7bea9f7a3371424e6c16ebc93252fe/d0/8d/CLziaZ2mV28uUhflLcq.jpg",
+    "question": "__________ is this man from Pakistan carrying ? - The flag of Pakistan.",
+    "options": [
+      {
+        "option": "Who",
+        "correct": false
+      },
+      {
+        "option": "What",
+        "correct": true
+      }
+    ],
+    "quiz": "english"
+  },
+  {
+    "topics": [
+      "Which or who"
+    ],
+    "instruction": "Conjugate the verb to be !",
+    "type": "multipleChoice",
+    "imageUrl": "https://static.klipy.com/ii/4e7bea9f7a3371424e6c16ebc93252fe/d0/8d/CLziaZ2mV28uUhflLcq.jpg",
+    "question": "The flag from Pakistan, __________ is being carried by the man, is green.",
+    "options": [
+      {
+        "option": "which",
+        "correct": true
+      },
+      {
+        "option": "who",
+        "correct": false
+      }
+    ],
+    "quiz": "english"
+  },
+  {
+    "topics": [
+      "Que ou qui"
+    ],
+    "instruction": "Fais la bonne choix entre qui ou que!",
+    "type": "multipleChoice",
+    "imageUrl": "https://static.klipy.com/ii/39f2394ae36df6e199be9eb7c9fa1012/cb/5f/vLRDitVFuLocFn.jpg",
+    "question": "Le drapeau de Camerun ____ a une étoile au milieu, se bouge dans le vent.",
+    "options": [
+      {
+        "option": "qui",
+        "correct": true
+      },
+      {
+        "option": "que",
+        "correct": false
+      }
+    ],
+    "quiz": "french"
+  },
+  {
+    "type": "multipleChoice",
+    "imageUrl": "assets/img/spanisch/jugadordefutbol.jpg",
+    "topics": [
+      "Konjunktionen"
+    ],
+    "question": "Questo giocatore di calcio guardagna molti soldi _____ ha un contratto di Real Madrid.",
+    "options": [
+      {
+        "option": "perché",
+        "correct": true
+      },
+      {
+        "option": "pero",
+        "correct": false
+      }
+    ],
+    "quiz": "italiano"
+  },
+  {
+    "type": "multipleChoice",
+    "imageUrl": "https://static.klipy.com/ii/f87f46a2c5aeaeed4c68910815f73eaf/76/49/tGXekHR4.jpg",
+    "topics": [
+      "Konjunktionen"
+    ],
+    "question": "Quest'imagine è divertita, ____________ è divertissima.",
+    "options": [
+      {
+        "option": "al contrario",
+        "correct": false
+      },
+      {
+        "option": "infatti",
+        "correct": false
+      },
+      {
+        "option": "anzi",
+        "correct": true
+      }
+    ],
+    "quiz": "italiano"
+  },
+  {
+    "type": "multipleChoice",
+    "imageUrl": "https://static.klipy.com/ii/f87f46a2c5aeaeed4c68910815f73eaf/76/49/tGXekHR4.jpg",
+    "topics": [
+      "Konjunktionen"
+    ],
+    "question": "Questo gatto sa molto su IT, __________ la sua profezione è Softwaredevelopper.",
+    "options": [
+      {
+        "option": "al contrario",
+        "correct": false
+      },
+      {
+        "option": "infatti",
+        "correct": true
+      },
+      {
+        "option": "anzi",
+        "correct": false
+      }
+    ],
+    "quiz": "italiano"
+  },
+  {
+    "type": "multipleChoice",
+    "imageUrl": "https://static.klipy.com/ii/f87f46a2c5aeaeed4c68910815f73eaf/76/49/tGXekHR4.jpg",
+    "topics": [
+      "Konjunktionen"
+    ],
+    "question": "Questo gatto ha fatto un Master d'Informatica, ________ sa molto su IT.",
+    "options": [
+      {
+        "option": "quindi",
+        "correct": true
+      },
+      {
+        "option": "pero",
+        "correct": false
+      },
+      {
+        "option": "anzi",
+        "correct": false
+      }
+    ],
+    "quiz": "italiano"
   }
 ]
