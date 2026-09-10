@@ -14,8 +14,7 @@ const client = axios.create({
 
   try {
   
-    const quizId = "6a97c59f894828561586b01d"; //The id for the Italian quiz
-    const data = { "quizId": "6a97c59f894828561586b01d" , "imageUrl": "farah.jpg", "instruction": "Fill kldsfjlksdf in the gaps", "type": "gapText", "gapText": "Farah {is} nice and her mother too.", "topics" : ["To be", "Adjectives", "Longer sentences"] , "options" : null };
+    const data = { "instruction": "Fill in the gaps", "type": "gapText", "gapText": "Farah {is} nice and her mother too.", "topics" : ["To be", "Adjectives", "Longer sentences"] , "options" : null };
     const response: AxiosResponse = await client.post(`/api/exercise`, data, config);
     console.log( response.data );
     console.log(response.status);
