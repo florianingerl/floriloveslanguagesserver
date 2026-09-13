@@ -1,4 +1,4 @@
-import mongoose, { Connection, Model, Schema } from "mongoose";
+import mongoose, { Types, Connection, Model, Schema } from "mongoose";
 import dbConfig from "../config/db.config";
 
 const connection: Connection = mongoose.createConnection(dbConfig.URL);
@@ -24,11 +24,16 @@ export interface IExerciseOption {
   correct: boolean;
 }
 
+export interface ITopic extends IBaseModel {
+  title: string;
+  tutorial: String;
+}
+
 export interface IExercise extends IBaseModel {
   quiz: string;
   type: string;
   imageUrl: string;
-  topics?: string[];
+  topic: Types.ObjectId;
   instruction?: string;
   gapText?: string;
   question?: string;
@@ -88,11 +93,16 @@ const ExerciseOptionSchema: Schema = new Schema(
   { _id: false },
 );
 
+const TopicSchema : Schema = new Schema({
+  title: { type: String, required: true },
+  tutorial: { type: String, required: false }
+});
+
 const ExerciseSchema: Schema = new Schema({
   quiz: { type: String, required: true, index: true },
   type: { type: String, required: true, enum: ["gapText", "multipleChoice"] },
   imageUrl: { type: String, required: true },
-  topics: { type: [String], required: false },
+  topic: { type: Types.ObjectId, required: true },
   instruction: { type: String, required: false },
   gapText: { type: String, required: false },
   question: { type: String, required: false },
@@ -121,10 +131,11 @@ const UserSchema: Schema = new Schema({
 
 
 // Export the models
+const Topic: Model<ITopic> = connection.model<ITopic>("Topic", TopicSchema );
 const Exercise: Model<IExercise> = connection.model<IExercise>("Exercise", ExerciseSchema);
 const User: Model<IUser> = connection.model<IUser>("User", UserSchema);
 const Dict: Model<IDict> = connection.model<IDict>("Dict", DictSchema);
 const DictPref : Model<IDictPref> = connection.model<IDictPref>("DictPref", DictPrefSchema );
 
 
-export { Exercise, User, Dict, DictPref };
+export { Exercise, User, Topic, Dict, DictPref };

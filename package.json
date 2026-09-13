@@ -20,6 +20,7 @@
     "createdictpreftest": "ts-node CreateDictPref.ts",
     "createdictpreftest2": "ts-node CreateDictPref2.ts",
     "getdictpreftest": "ts-node GetDicPref.ts",
+    "createnewtopictest":"ts-node CreateNewTopicTest.ts",
     "test10": "ts-node mongoconnecttestonline.ts",
     "dev": "nodemon --watch . --ext ts --exec ts-node server.ts"
 ,

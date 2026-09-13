@@ -25,6 +25,10 @@ import {
   getDictPrefByEmailAndLg,
 } from "./src/controllers/TimeIT/DictController";
 
+import {
+  createTopic
+} from "./src/controllers/TimeIT/TopicController";
+
 
 import authMiddleware from "./src/middleware/authMiddleware";
 
@@ -47,6 +51,7 @@ router.get("/amen", async (
    res.status(201).json( { message: "This is the amen endpoint !"});
 });
 // User routes
+router.post("/api/topic", createTopic);
 router.post("/api/exercise", createExercise);
 router.get("/api/exercise", getAllExercises );
 router.get("/api/exercise/:id", getExerciseById);

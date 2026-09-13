@@ -12,9 +12,11 @@ interface CorsOptions {
   credentials: boolean;
 }
 
+console.log(process.env.MONGODB_URL);
 const corsOptions: CorsOptions = { origin: dbConfig.CORS, credentials: true };
 const app = express();
-const client = new MongoClient(dbConfig.URL);
+//const client = new MongoClient(dbConfig.URL);
+const client = new MongoClient("mongodb+srv://flori:ABC@cluster0.p9bpe.mongodb.net/");
 
 app.use(cors(corsOptions));
 app.use(express.json());
