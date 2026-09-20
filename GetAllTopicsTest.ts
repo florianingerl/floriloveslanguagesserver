@@ -1,9 +1,13 @@
 import axios, { AxiosResponse, AxiosRequestConfig, RawAxiosRequestHeaders } from 'axios';
-import { IExercise } from './src/models/LanguageLearningModel';
+import { ITopic } from './src/models/LanguageLearningModel';
 
 const client = axios.create({
   baseURL: 'http://localhost:8080',
 });
+
+type emailOwner = {
+ email: string
+}
 
 
 (async () => {
@@ -14,13 +18,13 @@ const client = axios.create({
   };
   
   try {
-    const searchResponse: AxiosResponse = await client.get<IExercise[]>(`/api/exercise`, { params: { quiz: "french" } });
+    const searchResponse: AxiosResponse = await client.get(`/api/topic`, config);
     console.log(searchResponse);
-    const exercises: IExercise[] = searchResponse.data;
+    const topics: ITopic[] = searchResponse.data;
     
-    exercises.forEach ( (exercise: IExercise) => {
-        console.log( exercise.gapText );
-        
+    topics.forEach ( (topic: ITopic) => {
+        console.log(topic.title );
+      
     });
 
    

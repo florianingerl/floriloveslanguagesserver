@@ -25,6 +25,7 @@ export interface IExerciseOption {
 }
 
 export interface ITopic extends IBaseModel {
+  quiz: string;
   title: string;
   tutorial: String;
 }
@@ -33,7 +34,7 @@ export interface IExercise extends IBaseModel {
   quiz: string;
   type: string;
   imageUrl: string;
-  topic: Types.ObjectId;
+  topic?: Types.ObjectId;
   instruction?: string;
   gapText?: string;
   question?: string;
@@ -94,6 +95,7 @@ const ExerciseOptionSchema: Schema = new Schema(
 );
 
 const TopicSchema : Schema = new Schema({
+  quiz: {type: String, required: true, index: true},
   title: { type: String, required: true },
   tutorial: { type: String, required: false }
 });

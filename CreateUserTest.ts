@@ -14,8 +14,8 @@ const client = axios.create({
 
   try {
   
-    const data = { "quiz": "french", "title": "Qui ou que", "tutorial": "Qui is the subject of the relative clause, whereas que is the direct object!" };
-    const response: AxiosResponse = await client.post(`/api/topic`, data, config);
+    const data = { "name": "Farah", "email": "farah@gmail.com", "password": "ABC" };
+    const response: AxiosResponse = await client.post(`/api/register`, data, config);
     console.log( response.data );
     console.log(response.status);
     console.log(response.data.json);    

@@ -15,7 +15,7 @@ const client = axios.create({
   try {
   
     const quizId = "6a97c59f894828561586b01d"; //The id for the Italian quiz
-    const data = { "quizId": "6a97c59f894828561586b01d" , "imageUrl": "farah.jpg", "instruction": "Fill kldsfjlksdf in the gaps", "type": "gapText", "gapText": "Farah {is} nice and her mother too.", "topics" : ["To be", "Adjectives", "Longer sentences"] , "options" : null };
+    const data = { "quiz": "french" , "topic": "6aaa3c1324c4adb80337308a", "imageUrl": "farah.jpg", "instruction": "Fill kldsfjlksdf in the gaps", "type": "gapText", "gapText": "Farah {is} nice and her mother too.", "options" : null };
     const response: AxiosResponse = await client.post(`/api/exercise`, data, config);
     console.log( response.data );
     console.log(response.status);

@@ -26,7 +26,11 @@ import {
 } from "./src/controllers/TimeIT/DictController";
 
 import {
-  createTopic
+  createTopic,
+  deleteTopic,
+  getAllTopics,
+  getTopicById,
+  updateTopic
 } from "./src/controllers/TimeIT/TopicController";
 
 
@@ -52,6 +56,10 @@ router.get("/amen", async (
 });
 // User routes
 router.post("/api/topic", createTopic);
+router.get("/api/topic", getAllTopics);
+router.get("/api/topic/:id", getTopicById );
+router.put("/api/topic/:id", updateTopic);
+router.delete("/api/topic/:id", deleteTopic );
 router.post("/api/exercise", createExercise);
 router.get("/api/exercise", getAllExercises );
 router.get("/api/exercise/:id", getExerciseById);

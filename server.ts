@@ -6,6 +6,10 @@ import dbConfig from "./src/config/db.config";
 import testDB from "./src/helpers/testDB";
 import initDB from "./src/helpers/initDB";
 import { Request, Response} from "express";
+import 'dotenv/config';
+
+console.log(process.env.MONGODB_URL);
+
 
 interface CorsOptions {
   origin: string;

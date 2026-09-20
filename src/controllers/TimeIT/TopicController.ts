@@ -21,16 +21,14 @@ export const createTopic = async (
   }
 };
 
-/*
-export const getAllExercises = async (
+
+export const getAllTopics = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const filter =
-      typeof req.query.quiz === "string" ? { quiz: req.query.quiz } : {};
-    const exercises = await Exercise.find(filter);
-    res.json(exercises);
+    const topics = await Topic.find();
+    res.json(topics);
   } catch (error) {
     if (error instanceof Error) {
       res.status(400).json({ message: error.message });
@@ -40,17 +38,17 @@ export const getAllExercises = async (
   }
 };
 
-export const getExerciseById = async (
+export const getTopicById = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const exercise = await Exercise.findById(req.params.id);
-    if (!exercise) {
-      res.status(404).json({ message: "Exercise not found" });
+    const topic = await Topic.findById(req.params.id);
+    if (!topic) {
+      res.status(404).json({ message: "Topic not found" });
       return;
     }
-    res.json(exercise);
+    res.json(topic);
   } catch (error) {
     if (error instanceof Error) {
       res.status(400).json({ message: error.message });
@@ -61,20 +59,20 @@ export const getExerciseById = async (
 };
 
 
-export const updateExercise = async (
+export const updateTopic = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const exercise = await Exercise.findByIdAndUpdate(req.params.id, req.body, {
+    const topic = await Topic.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
-    if (!exercise) {
-      res.status(404).json({ message: "User not found" });
+    if (!topic) {
+      res.status(404).json({ message: "Topic not found" });
       return;
     }
-    res.json(exercise);
+    res.json(topic);
   } catch (error) {
     if (error instanceof Error) {
       res.status(400).json({ message: error.message });
@@ -84,17 +82,17 @@ export const updateExercise = async (
   }
 };
 
-export const deleteExercise = async (
+export const deleteTopic = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const exercise = await Exercise.findByIdAndDelete(req.params.id);
-    if (!exercise) {
-      res.status(404).json({ message: "Exercise not found" });
+    const topic = await Topic.findByIdAndDelete(req.params.id);
+    if (!topic) {
+      res.status(404).json({ message: "Topic not found" });
       return;
     }
-    res.json({ message: "Exercise deleted" });
+    res.json({ message: "Topic deleted" });
   } catch (error) {
     if (error instanceof Error) {
       res.status(400).json({ message: error.message });
@@ -102,4 +100,4 @@ export const deleteExercise = async (
       res.status(400).json({ message: "An unknown error occurred" });
     }
   }
-};*/
+};
