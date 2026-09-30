@@ -3,7 +3,11 @@ https://www.mongodb.com/community/forums/t/start-mongodb-server-and-connect-to-i
 I have created a new user with name flori and password ABC.
 This is how to connect with mongosh:
 
+Zum Entwickeln:
 mongosh "mongodb+srv://flori:ABC@cluster0.p9bpe.mongodb.net/"
+
+Für Production:
+mongodb://florian:6KBbrhiWRrK0el5vBw5L2NC61Lqs@212.227.212.151:27017/test?authSource=admin
 
 mongod.exe --dbpath=".\data\db"
 

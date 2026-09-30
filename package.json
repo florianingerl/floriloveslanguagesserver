@@ -20,10 +20,11 @@
     "createdictpreftest": "ts-node CreateDictPref.ts",
     "createdictpreftest2": "ts-node CreateDictPref2.ts",
     "getdictpreftest": "ts-node GetDicPref.ts",
-    "createnewtopictest":"ts-node CreateNewTopicTest.ts",
+    "createnewtopictest": "ts-node CreateNewTopicTest.ts",
+    "createusertest": "ts-node CreateUserTest.ts",
+    "getalltopicstest": "ts-node GetAllTopicsTest.ts",
     "test10": "ts-node mongoconnecttestonline.ts",
-    "dev": "nodemon --watch . --ext ts --exec ts-node server.ts"
-,
+    "dev": "nodemon --watch . --ext ts --exec ts-node server.ts",
     "build": "tsc ",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -46,6 +47,7 @@
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "date-fns": "^3.6.0",
+    "dotenv": "^17.4.2",
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.0",
@@ -62,6 +64,7 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/mongodb": "^4.0.6",
     "@types/passport": "^1.0.16",
+    "playwright": "^1.63.0",
     "ts-node": "^10.9.2"
   }
 }

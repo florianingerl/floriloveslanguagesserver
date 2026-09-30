@@ -34,6 +34,8 @@ import {
 } from "./src/controllers/TimeIT/TopicController";
 
 
+import { exportToFacile } from "./src/controllers/TimeIT/ExportFacileController";
+
 import authMiddleware from "./src/middleware/authMiddleware";
 
 const router = express.Router();
@@ -74,5 +76,8 @@ router.post("/api/dict", createDict );
 router.post("/api/dictprefbymailandlg", getDictPrefByEmailAndLg);
 router.post("/api/createDictionaryPref", createDictPref );
 //router.post("/api/updateOrCreateDictionaryPref", updateOrCreateDictPref );
+// Leitet den Test-Export an *facile.com weiter, weil der Browser das Cookie-Header
+// nicht setzen darf und die Seite keine CORS-Antworten schickt.
+router.post("/api/exportfacile", exportToFacile);
 
 export default router;
