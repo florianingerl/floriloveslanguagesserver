@@ -11,7 +11,9 @@ export enum UserRole {
 // Base interface for all models
 export interface IBaseModel {
   _id: string;
-  user: string | IUser;
+  // Kennzeichnet, wer das Dokument angelegt hat. Das Feld ist optional, weil
+  // nicht jedes Modell einen Besitzer hat (zum Beispiel Dict).
+  user?: string | IUser;
   name: string;
   description: string;
   //tags?: ITag[];
@@ -97,7 +99,9 @@ const ExerciseOptionSchema: Schema = new Schema(
 const TopicSchema : Schema = new Schema({
   quiz: {type: String, required: true, index: true},
   title: { type: String, required: true },
-  tutorial: { type: String, required: false }
+  tutorial: { type: String, required: false },
+  // Wer das Topic angelegt hat. Nur dieser Benutzer darf es aendern oder loeschen.
+  user: { type: Types.ObjectId, ref: "User", required: false, index: true }
 });
 
 const ExerciseSchema: Schema = new Schema({
@@ -105,6 +109,8 @@ const ExerciseSchema: Schema = new Schema({
   type: { type: String, required: true, enum: ["gapText", "multipleChoice"] },
   imageUrl: { type: String, required: true },
   topic: { type: Types.ObjectId, required: true },
+  // Wer die Aufgabe angelegt hat. Nur dieser Benutzer darf sie aendern oder loeschen.
+  user: { type: Types.ObjectId, ref: "User", required: false, index: true },
   instruction: { type: String, required: false },
   gapText: { type: String, required: false },
   question: { type: String, required: false },

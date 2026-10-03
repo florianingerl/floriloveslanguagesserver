@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { authConfig } from './src/helpers/authHeader';
 
 const client = axios.create({
   baseURL: 'http://localhost:8080',
@@ -6,7 +7,7 @@ const client = axios.create({
 
 async function deleteExercise(id: string): Promise<void> {
   try {
-    await client.delete(`/api/exercise/${encodeURIComponent(id)}`);
+    await client.delete(`/api/exercise/${encodeURIComponent(id)}`, await authConfig());
 
     console.log('Exercise deleted successfully');
   } catch (error) {

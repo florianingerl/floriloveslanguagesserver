@@ -1,4 +1,5 @@
 import axios, { AxiosResponse, AxiosRequestConfig, RawAxiosRequestHeaders } from 'axios';
+import { authConfig } from './src/helpers/authHeader';
 
 const client = axios.create({
   baseURL: 'http://localhost:8080',
@@ -9,6 +10,7 @@ const client = axios.create({
   const config: AxiosRequestConfig = {
     headers: {
       'Accept': 'application/json',
+      ...(await authConfig()).headers,
     } as RawAxiosRequestHeaders,
   };
 

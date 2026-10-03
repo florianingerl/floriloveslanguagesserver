@@ -57,16 +57,19 @@ router.get("/amen", async (
    res.status(201).json( { message: "This is the amen endpoint !"});
 });
 // User routes
-router.post("/api/topic", createTopic);
+// Lesen bleibt frei, damit Besucher ohne Anmeldung das Quiz sehen koennen.
+// Angelegt, geaendert und geloescht wird nur mit einem gueltigen Token
+// (Header "x-auth-token"), den authMiddleware prueft.
+router.post("/api/topic", authMiddleware, createTopic);
 router.get("/api/topic", getAllTopics);
 router.get("/api/topic/:id", getTopicById );
-router.put("/api/topic/:id", updateTopic);
-router.delete("/api/topic/:id", deleteTopic );
-router.post("/api/exercise", createExercise);
+router.put("/api/topic/:id", authMiddleware, updateTopic);
+router.delete("/api/topic/:id", authMiddleware, deleteTopic );
+router.post("/api/exercise", authMiddleware, createExercise);
 router.get("/api/exercise", getAllExercises );
 router.get("/api/exercise/:id", getExerciseById);
-router.put("/api/exercise/:id", updateExercise);
-router.delete("/api/exercise/:id", deleteExercise);
+router.put("/api/exercise/:id", authMiddleware, updateExercise);
+router.delete("/api/exercise/:id", authMiddleware, deleteExercise);
 router.post("/api/user", createUser);
 router.get("/api/user", getAllUsers);
 router.get("/api/user/:id", getUserById);

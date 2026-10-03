@@ -1,6 +1,11 @@
 import { Response } from "express";
 import { Exercise } from "../../models/LanguageLearningModel";
 import { AuthenticatedRequest } from "./AuthController";
+import {
+  besitzer as besitzerVon,
+  besitzerId,
+  besitzPruefen,
+} from "../../helpers/ownership";
 
 // controllers/userController.js
 export const createExercise = async (
@@ -8,10 +13,12 @@ export const createExercise = async (
   res: Response
 ): Promise<void> => {
   try {
-    const user = await Exercise.create({
+    const exercise = await Exercise.create({
       ...req.body,
+      // Der Besitzer kommt immer aus dem Token, nie aus dem Request-Body.
+      user: besitzerId(req),
     });
-    res.status(201).json(user);
+    res.status(201).json(exercise);
   } catch (error) {
     if (error instanceof Error) {
       res.status(400).json({ message: error.message });
@@ -65,12 +72,25 @@ export const updateExercise = async (
   res: Response
 ): Promise<void> => {
   try {
-    const exercise = await Exercise.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const vorhanden = await Exercise.findById(req.params.id);
+    if (!vorhanden) {
+      res.status(404).json({ message: "Exercise not found" });
+      return;
+    }
+    if (!besitzPruefen(req, res, vorhanden.user, "exercise")) {
+      return;
+    }
+
+    const exercise = await Exercise.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, user: besitzerVon(req, vorhanden.user) },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
     if (!exercise) {
-      res.status(404).json({ message: "User not found" });
+      res.status(404).json({ message: "Exercise not found" });
       return;
     }
     res.json(exercise);
@@ -88,11 +108,16 @@ export const deleteExercise = async (
   res: Response
 ): Promise<void> => {
   try {
-    const exercise = await Exercise.findByIdAndDelete(req.params.id);
-    if (!exercise) {
+    const vorhanden = await Exercise.findById(req.params.id);
+    if (!vorhanden) {
       res.status(404).json({ message: "Exercise not found" });
       return;
     }
+    if (!besitzPruefen(req, res, vorhanden.user, "exercise")) {
+      return;
+    }
+
+    await Exercise.findByIdAndDelete(req.params.id);
     res.json({ message: "Exercise deleted" });
   } catch (error) {
     if (error instanceof Error) {

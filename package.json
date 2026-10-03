@@ -25,6 +25,7 @@
     "getalltopicstest": "ts-node GetAllTopicsTest.ts",
     "test10": "ts-node mongoconnecttestonline.ts",
     "dev": "nodemon --watch . --ext ts --exec ts-node server.ts",
+    "migrateownership": "node migrate-ownership.js",
     "build": "tsc ",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

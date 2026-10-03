@@ -1,6 +1,11 @@
 import { Response } from "express";
 import { Topic } from "../../models/LanguageLearningModel";
 import { AuthenticatedRequest } from "./AuthController";
+import {
+  besitzer as besitzerVon,
+  besitzerId,
+  besitzPruefen,
+} from "../../helpers/ownership";
 
 // controllers/userController.js
 export const createTopic = async (
@@ -10,6 +15,8 @@ export const createTopic = async (
   try {
     const topic = await Topic.create({
       ...req.body,
+      // Der Besitzer kommt immer aus dem Token, nie aus dem Request-Body.
+      user: besitzerId(req),
     });
     res.status(201).json(topic);
   } catch (error) {
@@ -64,10 +71,23 @@ export const updateTopic = async (
   res: Response
 ): Promise<void> => {
   try {
-    const topic = await Topic.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const vorhanden = await Topic.findById(req.params.id);
+    if (!vorhanden) {
+      res.status(404).json({ message: "Topic not found" });
+      return;
+    }
+    if (!besitzPruefen(req, res, vorhanden.user, "topic")) {
+      return;
+    }
+
+    const topic = await Topic.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, user: besitzerVon(req, vorhanden.user) },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
     if (!topic) {
       res.status(404).json({ message: "Topic not found" });
       return;
@@ -87,11 +107,16 @@ export const deleteTopic = async (
   res: Response
 ): Promise<void> => {
   try {
-    const topic = await Topic.findByIdAndDelete(req.params.id);
-    if (!topic) {
+    const vorhanden = await Topic.findById(req.params.id);
+    if (!vorhanden) {
       res.status(404).json({ message: "Topic not found" });
       return;
     }
+    if (!besitzPruefen(req, res, vorhanden.user, "topic")) {
+      return;
+    }
+
+    await Topic.findByIdAndDelete(req.params.id);
     res.json({ message: "Topic deleted" });
   } catch (error) {
     if (error instanceof Error) {
