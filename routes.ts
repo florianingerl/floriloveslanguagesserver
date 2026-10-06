@@ -30,6 +30,7 @@ import {
   deleteTopic,
   getAllTopics,
   getTopicById,
+  getTopicsForQuiz,
   updateTopic
 } from "./src/controllers/TimeIT/TopicController";
 
@@ -62,7 +63,10 @@ router.get("/amen", async (
 // (Header "x-auth-token"), den authMiddleware prueft.
 router.post("/api/topic", authMiddleware, createTopic);
 router.get("/api/topic", getAllTopics);
-router.get("/api/topic/:id", getTopicById );
+// :id ist auf 24-stellige Mongo-IDs eingeschraenkt, damit
+// /api/topic/french nicht in getTopicById landet, sondern in getTopicsForQuiz.
+router.get("/api/topic/:id([0-9a-fA-F]{24})", getTopicById );
+router.get("/api/topic/:quizName", getTopicsForQuiz );
 router.put("/api/topic/:id", authMiddleware, updateTopic);
 router.delete("/api/topic/:id", authMiddleware, deleteTopic );
 router.post("/api/exercise", authMiddleware, createExercise);

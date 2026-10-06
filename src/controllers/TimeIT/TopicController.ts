@@ -45,6 +45,23 @@ export const getAllTopics = async (
   }
 };
 
+// Liefert alle Topics eines Quizzes, z. B. /api/topic/french
+export const getTopicsForQuiz = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const topics = await Topic.find({ quiz: req.params.quizName });
+    res.json(topics);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(400).json({ message: "An unknown error occurred" });
+    }
+  }
+};
+
 export const getTopicById = async (
   req: AuthenticatedRequest,
   res: Response
