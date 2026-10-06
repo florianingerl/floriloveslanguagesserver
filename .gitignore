@@ -1,2 +1,25 @@
 data/
 node_modules/
+backups/
+
+# Build-Ausgabe von "npm run build" – wird nicht eingecheckt
+dist/
+
+# Lokales Browser-Profil der Scraping-Skripte
+.ff-profile/
+
+# Einmalige Migrations- und Hilfs-Skripte
+migrate-exercises.js
+migrate-ownership.js
+mongodump.bash
+paypaltest.html
+scripts/*.js
+scripts/*.mjs
+scripts/espagnol/
+scripts/italian/
+
+# Altbestand der Seed-Daten
+seed/exercises.json
+
+# Wird von npm generiert
+package-lock.json
