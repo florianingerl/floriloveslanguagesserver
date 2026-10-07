@@ -32,6 +32,12 @@ export interface ITwoPartSentences {
   part2: string;
 }
 
+// Ein Wortreihen-Satz. Das Mischen der Woerter und die Antwort des
+// Benutzers passieren nur im Browser, deshalb wird nur der Satz gespeichert.
+export interface IWordOrderSentence {
+  sentence: string;
+}
+
 export interface ITopic extends IBaseModel {
   quiz: string;
   title: string;
@@ -54,6 +60,8 @@ export interface IExercise extends IBaseModel {
   // matching
   sentences?: ITwoPartSentences[];
   guessedSentences?: ITwoPartSentences[];
+  // word order
+  wordorder?: IWordOrderSentence;
 }
 
 export interface IUser extends IBaseModel {
@@ -114,6 +122,15 @@ const TwoPartSentencesSchema: Schema = new Schema(
   { _id: false },
 );
 
+// Ein Wortreihen-Satz: nur der Satz selbst wird gespeichert, das Mischen
+// der Woerter und die Antwort des Benutzers bleiben im Browser.
+const WordOrderSentenceSchema: Schema = new Schema(
+  {
+    sentence: { type: String, required: true },
+  },
+  { _id: false },
+);
+
 const TopicSchema : Schema = new Schema({
   quiz: {type: String, required: true, index: true},
   title: { type: String, required: true },
@@ -124,7 +141,7 @@ const TopicSchema : Schema = new Schema({
 
 const ExerciseSchema: Schema = new Schema({
   quiz: { type: String, required: true, index: true },
-  type: { type: String, required: true, enum: ["gapText", "multipleChoice", "matching"] },
+  type: { type: String, required: true, enum: ["gapText", "multipleChoice", "matching", "wordOrder"] },
   imageUrl: { type: String, required: true },
   topic: { type: Types.ObjectId, required: true },
   // Wer die Aufgabe angelegt hat. Nur dieser Benutzer darf sie aendern oder loeschen.
@@ -140,6 +157,8 @@ const ExerciseSchema: Schema = new Schema({
   // matching: die Saelze der Aufgabe und das, was der Benutzer zusammengeklickt hat.
   sentences: { type: [TwoPartSentencesSchema], required: false },
   guessedSentences: { type: [TwoPartSentencesSchema], required: false },
+  // word order: der Satz, den der Benutzer rekonstruieren muss.
+  wordorder: { type: WordOrderSentenceSchema, required: false },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
