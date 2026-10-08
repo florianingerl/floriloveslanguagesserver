@@ -1,10 +1,13 @@
 import cors from "cors";
 import express from "express";
+import { createServer } from "http";
+import { Server as SocketServer } from "socket.io";
 import { MongoClient } from "mongodb";
 import routes from "./routes";
 import dbConfig from "./src/config/db.config";
 import testDB from "./src/helpers/testDB";
 import initDB from "./src/helpers/initDB";
+import { attachThreeInARow } from "./src/threeInARow/socket";
 import { Request, Response} from "express";
 import 'dotenv/config';
 
@@ -47,8 +50,17 @@ async function run(): Promise<void> {
 run().catch(console.error);
 
 const PORT = Number(process.env.PORT) || 8080;
-app.listen(PORT, async () => {
+
+// Express stays the HTTP layer, socket.io rides on the same server
+// (game "Three-in-a-row").
+const httpServer = createServer(app);
+const io = new SocketServer(httpServer, {
+  cors: { origin: dbConfig.CORS, methods: ["GET", "POST"] },
+});
+attachThreeInARow(io);
+
+httpServer.listen(PORT, async () => {
   // await testDB();
   // await initDB();
-  console.log(`Server is running on port ${8080}`);
+  console.log(`Server is running on port ${PORT}`);
 });

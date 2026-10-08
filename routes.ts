@@ -57,6 +57,20 @@ router.get("/amen", async (
    console.log("The amen endpoint was called!");
    res.status(201).json( { message: "This is the amen endpoint !"});
 });
+
+// Spiel "Three-in-a-row": Die Spiellogik laeuft ueber socket.io
+// (createSession, joinSession, move, newGame, switchColors, loadPgn),
+// dieser Endpunkt meldet nur, dass das Spiel hier andhaengt.
+router.get("/api/threeinarow", (
+  req: Request,
+  res: Response
+): void => {
+  res.json({
+    game: "Three-in-a-row",
+    transport: "socket.io",
+    events: ["createSession", "joinSession", "move", "newGame", "switchColors", "loadPgn"],
+  });
+});
 // User routes
 // Lesen bleibt frei, damit Besucher ohne Anmeldung das Quiz sehen koennen.
 // Angelegt, geaendert und geloescht wird nur mit einem gueltigen Token
