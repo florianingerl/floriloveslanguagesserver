@@ -1,0 +1,23 @@
+To my development database, can you add the Topic "Conjunctions" (Please translate this to Italian) to the Italian quiz.
+
+Then please create say 30 exercises for that Topic. You can create gapText, matching and multiple choice and word worder exercises !
+
+Example for a gapText exercise:
+gapText = "Non ho più fame {perché} ho appena mangiato dieci mele."
+
+Once you have the sentence, you can search for an image on Klippy using one of the nouns, that appear in the exercise (either in the options given, or in the gap text or in the question), e.g.
+for above sentence, you could search for "mele" or "apple" or you could search for "fame" or "hunger" in the Klippy API. (I use the Klippy endpoint provided
+for this already in VueNewExercise.vue of my frontend)
+
+Of the images you get from Klippy, choose a random one,  and set it to imageUrl of the exercise.
+
+The owner of the exercise should be the user with email imelflorianingerl@gmail.com
+
+Choose a suitable instruction for each exercise.
+
+QuizName should be Italien.
+Everything you insert now into the database should be italian, including the title of the topic, the tutorial of the topic,
+the instructions of the exercises and the questions of the exercises.
+
+And please also insert some html for the tutorial of the topic into the database.
+The html should be very simple, such that it can be edited with the JoditEditor later !

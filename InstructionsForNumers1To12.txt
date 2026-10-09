@@ -1,0 +1,18 @@
+To my development database, can you add the Topic "Les nombres de 1 à 12" to the French quiz.
+
+Then please create 10 gapText exercises (without options given) for that topic. The number that the gap wants, should be written behind the gap, e.g.
+
+gapText = "Aujourd'hui, je mange les {deux} 2 bananes qui sont encore dans le réfrigerateur."
+
+The sentences should be as simple as possible, for a student that has been learning French only since 3 months.
+
+Once you have the sentence, you can search for an image on Klippy using one of the nouns, that appear in your sentence, e.g.
+for above sentence, you could search for banane or you could search for réfrigerateur in the Klippy API. (I use the Klippy endpoint provided
+for this already in VueNewExercise.vue of my frontend)
+
+Take the first image you get from Klippy and set it to imageUrl of the exercise.
+
+The owner of the exercise should be the user with email imelflorianingerl@gmail.com
+
+Instruction should be: "Remplis le trou par le bon nombre entre 1 et 12 !"
+QuizName should be French.
