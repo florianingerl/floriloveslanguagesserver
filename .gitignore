@@ -20,6 +20,3 @@ scripts/italian/
 
 # Altbestand der Seed-Daten
 seed/exercises.json
-
-# Wird von npm generiert
-package-lock.json
