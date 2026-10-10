@@ -58,6 +58,14 @@ router.get("/amen", async (
    res.status(201).json( { message: "This is the amen endpoint !"});
 });
 
+router.get("/dummy", async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+   console.log("The dummy endpoint was called!");
+   res.status(201).json( { message: "This is the dummy endpoint !"});
+});
+
 // Spiel "Three-in-a-row": Die Spiellogik laeuft ueber socket.io
 // (createSession, joinSession, move, newGame, switchColors, loadPgn),
 // dieser Endpunkt meldet nur, dass das Spiel hier andhaengt.
