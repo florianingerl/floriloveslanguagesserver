@@ -1,0 +1,53 @@
+In Terminal
+
+ssh root@82.165.94.44
+
+Passwort kann über Strg+Umschalt+V eingefügt werden.
+
+dann
+
+su - appdeploy
+cd /var/www/floriloveslanguagesserver
+
+Oder direkt mit
+ssh -i "%USERPROFILE%\.ssh\github_actions_deploy" appdeploy@82.165.94.44
+
+verbinden !
+
+dann
+npm run build
+npm run start
+
+Folgendermaßen wurde der Dienst eingerichtet:
+Wenn du den Server direkt mit npm start im SSH-Terminal gestartet hast, solltest du nicht darauf vertrauen, dass er nach dem Schließen der SSH-Sitzung weiterläuft. Richte ihn als systemd-Dienst ein. Dann läuft er im Hintergrund und startet auch nach einem VPS-Neustart automatisch.
+
+Beende den derzeit im Vordergrund laufenden Server mit Strg+C.
+Als root erstelle die Dienstdatei:
+bash
+
+
+cat >/etc/systemd/system/floriloveslanguagesserver.service <<'EOF'
+[Unit]
+Description=Flori Loves Languages Node.js server
+After=network.target
+
+[Service]
+Type=simple
+User=appdeploy
+WorkingDirectory=/var/www/floriloveslanguagesserver
+ExecStart=/usr/bin/npm start
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+Die wichtigsten Verwaltungsbefehle für den Server:
+systemctl stop floriloveslanguagesserver
+systemctl restart floriloveslanguagesserver
+journalctl -u floriloveslanguagesserver -f
+
+
+Mit journalctl kannst du die laufenden Protokollmeldungen ansehen; 
+mit Strg+C verlässt du die Protokollanzeige, ohne den Dienst zu stoppen.
