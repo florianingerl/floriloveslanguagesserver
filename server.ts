@@ -9,7 +9,6 @@ import testDB from "./src/helpers/testDB";
 import initDB from "./src/helpers/initDB";
 import { attachThreeInARow } from "./src/threeInARow/socket";
 import { Request, Response} from "express";
-import 'dotenv/config';
 
 console.log(process.env.MONGODB_URL);
 
@@ -19,11 +18,10 @@ interface CorsOptions {
   credentials: boolean;
 }
 
-console.log(process.env.MONGODB_URL);
+
 const corsOptions: CorsOptions = { origin: dbConfig.CORS, credentials: true };
 const app = express();
-//const client = new MongoClient(dbConfig.URL);
-const client = new MongoClient("mongodb+srv://flori:ABC@cluster0.p9bpe.mongodb.net/");
+
 
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -32,6 +30,9 @@ app.use(express.urlencoded({ extended: true }));
 // Use the routes
 app.use("/", routes);
 
+console.log("Testing whether we can connect to the MONGO DB database at " + dbConfig.URL);
+const client = new MongoClient(dbConfig.URL);
+//const client = new MongoClient("mongodb+srv://flori:ABC@cluster0.p9bpe.mongodb.net/");
 async function run(): Promise<void> {
   try {
     await client.connect();

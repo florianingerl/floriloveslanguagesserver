@@ -4,7 +4,7 @@
   "description": "Node.js CRUD example with Mongodb",
   "main": "server.ts",
   "scripts": {
-    "start": "ts-node server.ts",
+    "start": "cross-env NODE_ENV=production ts-node server.ts",
     "seed": "ts-node seed.ts",
     "mongotestconnect": "ts-node mongoconnecttest.ts",
     "axiostest": "ts-node axiostest.ts",
@@ -24,7 +24,7 @@
     "createusertest": "ts-node CreateUserTest.ts",
     "getalltopicstest": "ts-node GetAllTopicsTest.ts",
     "test10": "ts-node mongoconnecttestonline.ts",
-    "dev": "nodemon --watch . --ext ts --exec ts-node server.ts",
+    "dev": "cross-env NODE_ENV=development nodemon --watch . --ext ts --exec ts-node server.ts",
     "migrateownership": "node migrate-ownership.js",
     "build": "tsc ",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -69,6 +69,7 @@
     "@types/mongodb": "^4.0.6",
     "@types/node": "^26.6.4",
     "@types/passport": "^1.0.16",
+    "cross-env": "^10.1.0",
     "playwright": "^1.63.0",
     "socket.io-client": "^4.8.4",
     "ts-node": "^10.9.2"
