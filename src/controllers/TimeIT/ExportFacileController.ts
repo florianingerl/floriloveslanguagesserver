@@ -8,7 +8,7 @@ const SEITEN = [
   "allemandfacile.com",
   "espagnolfacile.com",
   "francaisfacile.com",
-  "italienfacile.com",
+  "italien-facile.com",
 ] as const;
 
 // Auch der Pfad ist fest verdrahtet, damit die Route nichts anderes treffen kann.
