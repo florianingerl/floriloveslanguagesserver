@@ -1,0 +1,4 @@
+For the Italian quiz, can you create the new topic "Pronoms personnel - Formes tonique o atone" (please translate this topic into Italian before inserting it into the database ) . Can you then create 10 exercises for that topic, including some Matching, some WordOder , MutlipleChoice and GapText exercises . But these exercises should be in a random order. 
+Everything should be in Italian, including the tutorial and the title of the topic and the instruction of the exercises.
+
+Go ahead please ! Insert it everything in my production database !

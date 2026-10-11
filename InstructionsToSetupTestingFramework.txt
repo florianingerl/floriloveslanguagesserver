@@ -1,0 +1,14 @@
+Can you please set up a testing framework for this backend server !
+I want to use Supertest and ViteTest, so please add them to package.json.
+
+The tests should run and pass before every commit. If one of the tests doesn't pass, nothing will be commited.
+
+You can add a test for the amen endpoint (just to show how the viteTest framework must be used for other endpoints that can be tested)
+Check in the test whether the amen endpoint really returns the message "The amen enpoint was called" as json.
+
+And demonstrate the use of vitest to test isolated functions. So maybe create a folder with utility functions , add an add function there
+for adding two numbers and then test this function.
+
+Go ahead please! Implement and commit and push !
+
+

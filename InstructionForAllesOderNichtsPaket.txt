@@ -1,0 +1,52 @@
+In my frontend. Under the section "Preise, Termine und Bezahlung", I mention the Alles-oder-Nichts-Paket with the words
+ "Alles-oder-Nichts-Paket: 500 Euro für eine bestandene Prüfung / 0 Euro sonst" Can you change it to 
+ "Alles-oder-Nichts-Paket: z.B. 500 Euro für eine bestandene Prüfung in 5 Wochen / 0 Euro sonst" Further down, there is more explication
+ for this package.
+ Can you change the sentence 
+ Solltest du sie nicht bestehen, bekommst du das Geld nur zurück, falls du mir die Bilder deiner nicht-bestandenen Klausur aus der Einsicht schicken kannst.
+ by removing the word nur.
+
+ And can you add !
+ Die genauen Details deines (in italic) Alles-oder-Nichts-Pakets handeln wir vertraglich für uns beide zur Unterschrift aus.
+ Danach soll ein button kommen mit Aufschrift, "Jetzt Vertrag erstellen".
+
+ Danach soll ein modaler dialog erscheinen, wo der Schüler folgendes eingeben muss:
+
+ 1) Datum der Prüfung
+ 2) Schule, Hochschule, Universität oder andere Institution (z.B. Institut de francais für Delf oder Goethe-Institut für Deutsch), wo die Prüfungs stattfinden 
+ 3.) vollständiger Name und Adresse von dem Schüler
+ (Als Hinweis soll hier kommen, dass er hier alles frei lassen kann, wenn er nur unverbindlich den Preis berechnen lassen will. Später
+ kann er hier seine richtigen Daten eingeben, den Vertrag unterschreiben und ihn mir dann zuschicken ! )
+4.)Ziel muss eingegeben werden (z.B. Bestehen der Prüfung oder Note 3)
+5.) das Fach muss eingegeben werden (z.B. Mathe, Elektrotechnik oder Frnzösisch)
+6.) Sprache für den Vertrag (DropDown menu with only German (default), English, French, Spanish and Italian given
+
+Danach soll der Preis berechnet werden.
+Dazu wird geschaut, wie wiele Wochen es noch bis zur Prüfung sind.
+Dann wird der Preis über die Formel 
+Preis = Anzahl der Wochen bis zur Prüfung * (if( isALanguage(fach) ) 4*15 Euro else 4*30 Euro  ) + 100 Euro ( für das Risiko, dass der Schüler nicht bestehen sollte!)
+
+Die Methode isALangue(string fach) schaut, ob der string fach eine der Sprachen, die auf meiner Website erwähnt sind enthält
+(case insensitive, egal, in welcher Sprache )
+
+Dann wird der Vertrag als .pdf und wenn möglich als Word Dokument und asl .rtf-Datei generiert.
+Der Schüler soll diese Dateien dann herunterladen können. (3 Buttons are provided)
+
+Der Dialog sollte neben einem "Vertrag als Datei erstellen"-Button auch einen Button für Close enthalten.
+Bei Klick auf Close verschwindet der modale Dialog.
+
+ Die Vorlage für den Vertrag ist in website/MustervertragAllesOderNichtsPaket.rtf
+
+Was in dem Mustervertrag rot ist, muss in dem richtigen Vertrg durch die vom Schüler im Dialog eingegebenen Daten ersetzt werden.
+
+Wenn du dazu imstande bist, kannst du auch meinen Mustervertrag verändern, so dass
+alles schön formatiert und alles rechtlich korrekt ist, sollte es nachher vor Gericht gehen.
+
+Alles muss für die Website auch auf die anderen Sprachen übersetzt werden. Also benutze die I18 interntionalisation library
+and translate everything yourself as best as you can.
+
+Also the contract you can translate yourself as best as you can into the language that the user has entered in above dialog
+
+Please go ahead and implement !
+
+
