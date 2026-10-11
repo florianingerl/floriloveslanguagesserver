@@ -15,6 +15,8 @@ export const createTopic = async (
   try {
     const topic = await Topic.create({
       ...req.body,
+      // Alte Aufrufe schicken "quiz", neu heisst das Feld "subject".
+      subject: req.body.subject ?? req.body.quiz,
       // Der Besitzer kommt immer aus dem Token, nie aus dem Request-Body.
       user: besitzerId(req),
     });
@@ -45,13 +47,15 @@ export const getAllTopics = async (
   }
 };
 
-// Liefert alle Topics eines Quizzes, z. B. /api/topic/french
+// Liefert alle Themen eines Faches, z. B. /api/topic/french. Frueher hiess das
+// Feld "quiz" und der Filter suchte nach dem Quiz-Namen; heute gibt ein Thema
+// sein Fach in "subject" an. Der URL-Parameter bleibt derselbe.
 export const getTopicsForQuiz = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const topics = await Topic.find({ quiz: req.params.quizName });
+    const topics = await Topic.find({ subject: req.params.quizName });
     res.json(topics);
   } catch (error) {
     if (error instanceof Error) {
@@ -99,7 +103,11 @@ export const updateTopic = async (
 
     const topic = await Topic.findByIdAndUpdate(
       req.params.id,
-      { ...req.body, user: besitzerVon(req, vorhanden.user) },
+      {
+        ...req.body,
+        ...(req.body.subject ? { subject: req.body.subject } : req.body.quiz ? { subject: req.body.quiz } : {}),
+        user: besitzerVon(req, vorhanden.user),
+      },
       {
         new: true,
         runValidators: true,

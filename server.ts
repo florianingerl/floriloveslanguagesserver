@@ -8,6 +8,7 @@ import dbConfig from "./src/config/db.config";
 import testDB from "./src/helpers/testDB";
 import initDB from "./src/helpers/initDB";
 import { attachThreeInARow } from "./src/threeInARow/socket";
+import { attachBookCollaboration } from "./src/bookCollaboration/socket";
 import { Request, Response} from "express";
 
 console.log(process.env.MONGODB_URL);
@@ -52,13 +53,17 @@ run().catch(console.error);
 
 const PORT = Number(process.env.PORT) || 8080;
 
-// Express stays the HTTP layer, socket.io rides on the same server
-// (game "Three-in-a-row").
+// Express bleibt die HTTP-Schicht, socket.io reitet auf demselben Server.
+// "fragfloriancollaborationserver" sitzt also hier in server.ts und teilt
+// sich in die beiden Aufgaben mit jeweils einem eigenen Ordner:
+//   src/threeInARow/        Spiel "Three-in-a-row"
+//   src/bookCollaboration/  Gemeinsames Schreiben von Buechern
 const httpServer = createServer(app);
 const io = new SocketServer(httpServer, {
   cors: { origin: dbConfig.CORS, methods: ["GET", "POST"] },
 });
 attachThreeInARow(io);
+attachBookCollaboration(io);
 
 httpServer.listen(PORT, async () => {
   // await testDB();

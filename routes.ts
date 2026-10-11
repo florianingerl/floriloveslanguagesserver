@@ -34,6 +34,19 @@ import {
   updateTopic
 } from "./src/controllers/TimeIT/TopicController";
 
+import {
+  createQuiz,
+  getQuizById,
+} from "./src/controllers/TimeIT/QuizController";
+
+import {
+  createBook,
+  deleteBook,
+  getAllBooks,
+  getBookById,
+  updateBook,
+} from "./src/controllers/TimeIT/BookController";
+
 
 import { exportToFacile } from "./src/controllers/TimeIT/ExportFacileController";
 
@@ -96,6 +109,16 @@ router.get("/api/exercise", getAllExercises );
 router.get("/api/exercise/:id", getExerciseById);
 router.put("/api/exercise/:id", authMiddleware, updateExercise);
 router.delete("/api/exercise/:id", authMiddleware, deleteExercise);
+// Quizze: angelegt werden vor allem die Buch-Quizze, gelesen werden sie fuer
+// die Anzeige im Buch (GET /api/quiz/:id).
+router.post("/api/quiz", authMiddleware, createQuiz);
+router.get("/api/quiz/:id([0-9a-fA-F]{24})", getQuizById);
+// Buecher (gemeinsames Schreiben mit VueBookWriter).
+router.get("/api/book", getAllBooks);
+router.get("/api/book/:id([0-9a-fA-F]{24})", getBookById);
+router.post("/api/book", authMiddleware, createBook);
+router.put("/api/book/:id([0-9a-fA-F]{24})", authMiddleware, updateBook);
+router.delete("/api/book/:id([0-9a-fA-F]{24})", authMiddleware, deleteBook);
 router.post("/api/user", createUser);
 router.get("/api/user", getAllUsers);
 router.get("/api/user/:id", getUserById);
