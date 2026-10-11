@@ -1,4 +1,5 @@
 import { Response } from "express";
+import { Types } from "mongoose";
 import { Book } from "../../models/LanguageLearningModel";
 import { AuthenticatedRequest } from "./AuthController";
 import {
@@ -32,10 +33,11 @@ export const getAllBooks = async (
   res: Response
 ): Promise<void> => {
   try {
-    const filter =
-      typeof req.query.subject === "string" && req.query.subject
-        ? { subject: req.query.subject }
-        : {};
+    const filter: Record<string, unknown> = {};
+    if (typeof req.query.subject === "string" && req.query.subject)
+      filter.subject = req.query.subject;
+    if (typeof req.query.store === "string" && req.query.store)
+      filter.store = new Types.ObjectId(req.query.store);
     const books = await Book.find(filter);
     res.json(books);
   } catch (error) {

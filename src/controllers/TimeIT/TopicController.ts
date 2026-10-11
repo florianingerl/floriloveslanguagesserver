@@ -1,5 +1,6 @@
 import { Response } from "express";
-import { Topic } from "../../models/LanguageLearningModel";
+import { Types } from "mongoose";
+import { Quiz, Topic } from "../../models/LanguageLearningModel";
 import { AuthenticatedRequest } from "./AuthController";
 import {
   besitzer as besitzerVon,
@@ -7,16 +8,31 @@ import {
   besitzPruefen,
 } from "../../helpers/ownership";
 
+// Eine quiz-Angabe ist entweder eine 24-stellige Mongo-Id oder das Fach eines
+// Website-Quizzes. Daraus wird die _id des Quiz-Dokuments bestimmt.
+async function quizIdAus(wert: unknown): Promise<Types.ObjectId | undefined> {
+  if (wert === undefined || wert === null || wert === "") return undefined;
+  if (typeof wert === "string" && /^[0-9a-fA-F]{24}$/.test(wert)) {
+    return new Types.ObjectId(wert);
+  }
+  const quiz = await Quiz.findOne({ subject: String(wert) });
+  return quiz?._id ? new Types.ObjectId(String(quiz._id)) : undefined;
+}
+
 // controllers/userController.js
 export const createTopic = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
   try {
+    const quizId = await quizIdAus(req.body.quiz);
+    const quiz = quizId ? await Quiz.findById(quizId) : null;
     const topic = await Topic.create({
       ...req.body,
-      // Alte Aufrufe schicken "quiz", neu heisst das Feld "subject".
-      subject: req.body.subject ?? req.body.quiz,
+      // Alte Aufrufe schicken "quiz" (Fach als String), neu heisst das Feld
+      // "subject"; "quiz" ist jetzt die _id des Quiz-Dokuments.
+      subject: req.body.subject ?? req.body.language ?? quiz?.subject,
+      quiz: quizId,
       // Der Besitzer kommt immer aus dem Token, nie aus dem Request-Body.
       user: besitzerId(req),
     });
@@ -101,18 +117,18 @@ export const updateTopic = async (
       return;
     }
 
-    const topic = await Topic.findByIdAndUpdate(
-      req.params.id,
-      {
-        ...req.body,
-        ...(req.body.subject ? { subject: req.body.subject } : req.body.quiz ? { subject: req.body.quiz } : {}),
-        user: besitzerVon(req, vorhanden.user),
-      },
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+    const daten: Record<string, unknown> = {
+      ...req.body,
+      user: besitzerVon(req, vorhanden.user),
+    };
+    if (req.body.quiz !== undefined) daten.quiz = await quizIdAus(req.body.quiz);
+    if (req.body.language !== undefined && daten.subject === undefined)
+      daten.subject = req.body.language;
+
+    const topic = await Topic.findByIdAndUpdate(req.params.id, daten, {
+      new: true,
+      runValidators: true,
+    });
     if (!topic) {
       res.status(404).json({ message: "Topic not found" });
       return;

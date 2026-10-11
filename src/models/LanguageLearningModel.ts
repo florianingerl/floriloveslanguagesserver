@@ -39,27 +39,46 @@ export interface IWordOrderSentence {
 }
 
 export interface ITopic extends IBaseModel {
+  // Sprache oder Fach, z.B. "deutsch" oder "Mathematik". Das Feld heisst
+  // bewusst "subject" (nicht "language").
   subject: string;
   title: string;
   tutorial: String;
+  // Das Quiz, in dem das Thema angelegt wurde.
+  quiz?: Types.ObjectId;
 }
 
 // Ein Quiz kann zu einer Website ("web") oder zu einem Buch ("book")
-// gehoeren. Die Website-Quizze sind die Sprach-/Fachsei-Quizzes ("french",
-// "english", "deutsch", ...), deren Name der alte Erkennungsschluessel ist.
+// gehoeren. Die Website-Quizze sind die Sprach-/Fachseiten-Quizze ("french",
+// "english", "deutsch", ...), deren Fach der alte Erkennungsschluessel ist.
 export interface IQuiz {
   _id: string;
   // "web" = Quiz einer Sprache/Fach-Seite, "book" = Quiz innerhalb eines Buchs.
   website: string;
   // Nur bei website === "book": das Buch, in dem das Quiz erscheint.
   book?: Types.ObjectId;
-  // Sprache oder Fach, z.B. "deutsch" oder "Mathematik". Bei den
-  // Website-Quizzen ist das der Quiz-Name, unter dem der Browser Aufgaben und
-  // Themen anfragt (z.B. "french", "english", "deutsch").
-  language: string;
+  // Sprache oder Fach, z.B. "deutsch", "Mathematik", "nutrition". Der Wert ist
+  // ein freier String, kein Enum. Bei den Website-Quizzen ist das der Name,
+  // unter dem der Browser Aufgaben und Themen anfragt.
+  subject: string;
   // Anzeige-Name, z.B. "Wortschatz: Sterne".
   name?: string;
   // _id des Benutzers, der das Quiz angelegt hat. Setzt der Server selbst.
+  user?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// Ein Buchladen buendelt Buecher. Auf der Website steht er fuer eine
+// Sprach-/Fachseite (z.B. "Flori's German books" fuer "deutsch").
+export interface IBookStore {
+  _id: string;
+  name: string;
+  // Sprache oder Fach, z.B. "deutsch" oder "Mathematik".
+  subject: string;
+  // Website, auf der der Laden erscheint.
+  website: string;
+  // _id des Benutzers, der den Laden angelegt hat. Setzt der Server selbst.
   user?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -74,6 +93,8 @@ export interface IBook {
   paragraphs: string[];
   // _ids der Quizze in der Reihenfolge, in der sie im Buch erscheinen.
   quizzes: Types.ObjectId[];
+  // Der Buchladen, zu dem das Buch gehoert.
+  store?: Types.ObjectId;
   // _id des Benutzers, der das Buch angelegt hat. Setzt der Server selbst.
   user?: string;
   createdAt?: Date;
@@ -83,7 +104,7 @@ export interface IBook {
 export interface IExercise extends IBaseModel {
   quiz: Types.ObjectId;
   // Sprache oder Fach, z.B. "deutsch". Setzt der Server aus dem Quiz.
-  language?: string;
+  subject?: string;
   type: string;
   imageUrl: string;
   topic?: Types.ObjectId;
@@ -172,20 +193,31 @@ const WordOrderSentenceSchema: Schema = new Schema(
 const QuizSchema: Schema = new Schema({
   website: { type: String, required: true, index: true },
   book: { type: Types.ObjectId, ref: "Book", required: false },
-  language: { type: String, required: true, index: true },
+  subject: { type: String, required: true, index: true },
   name: { type: String, required: false },
   // Wer das Quiz angelegt hat.
   user: { type: Types.ObjectId, ref: "User", required: false, index: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
-QuizSchema.index({ website: 1, language: 1 });
+QuizSchema.index({ website: 1, subject: 1 });
+
+const BookStoreSchema: Schema = new Schema({
+  name: { type: String, required: true },
+  subject: { type: String, required: true, index: true },
+  website: { type: String, required: false, index: true },
+  // Wer den Laden angelegt hat. Nur dieser Benutzer darf ihn aendern.
+  user: { type: Types.ObjectId, ref: "User", required: false, index: true },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
 
 const BookSchema: Schema = new Schema({
   name: { type: String, required: true },
   subject: { type: String, required: true, index: true },
   paragraphs: { type: [String], required: false },
   quizzes: { type: [Types.ObjectId], ref: "Quiz", required: false },
+  store: { type: Types.ObjectId, ref: "BookStore", required: false, index: true },
   // Wer das Buch angelegt hat. Nur dieser Benutzer darf es aendern oder loeschen.
   user: { type: Types.ObjectId, ref: "User", required: false, index: true },
   createdAt: { type: Date, default: Date.now },
@@ -196,13 +228,15 @@ const TopicSchema : Schema = new Schema({
   subject: {type: String, required: true, index: true},
   title: { type: String, required: true },
   tutorial: { type: String, required: false },
+  // Das Quiz, in dem das Thema angelegt wurde.
+  quiz: { type: Types.ObjectId, ref: "Quiz", required: false, index: true },
   // Wer das Topic angelegt hat. Nur dieser Benutzer darf es aendern oder loeschen.
   user: { type: Types.ObjectId, ref: "User", required: false, index: true }
 });
 
 const ExerciseSchema: Schema = new Schema({
   quiz: { type: Types.ObjectId, ref: "Quiz", required: true, index: true },
-  language: { type: String, required: false, index: true },
+  subject: { type: String, required: false, index: true },
   type: { type: String, required: true, enum: ["gapText", "multipleChoice", "matching", "wordOrder"] },
   imageUrl: { type: String, required: true },
   // Ein Absatz kann auch ohne Topic gespeichert werden (z.B. die Aufgabe eines
@@ -250,6 +284,10 @@ const Dict: Model<IDict> = connection.model<IDict>("Dict", DictSchema);
 const DictPref : Model<IDictPref> = connection.model<IDictPref>("DictPref", DictPrefSchema );
 const Quiz: Model<IQuiz> = connection.model<IQuiz>("Quiz", QuizSchema);
 const Book: Model<IBook> = connection.model<IBook>("Book", BookSchema);
+const BookStore: Model<IBookStore> = connection.model<IBookStore>(
+  "BookStore",
+  BookStoreSchema
+);
 
 
-export { Exercise, User, Topic, Dict, DictPref, Quiz, Book };
+export { Exercise, User, Topic, Dict, DictPref, Quiz, Book, BookStore };

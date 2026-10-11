@@ -8,14 +8,17 @@ import {
   besitzPruefen,
 } from "../../helpers/ownership";
 
-// Eine quiz-Angabe kann eine 24-stellige Mongo-Id sein (neu) oder der Name
-// eines Website-Quizzes (alt, z.B. "deutsch"). Aus dem Namen wird die Id des
+// Eine quiz-Angabe kann eine 24-stellige Mongo-Id sein (neu) oder das Fach
+// eines Website-Quizzes (alt, z.B. "deutsch"). Aus dem Fach wird die Id des
 // passenden Quiz-Dokuments gesucht, damit auch alte Aufrufe weiter funktionieren.
 async function quizIdAus(wert: unknown): Promise<Types.ObjectId> {
   if (typeof wert === "string" && /^[0-9a-fA-F]{24}$/.test(wert)) {
     return new Types.ObjectId(wert);
   }
-  const quiz = await Quiz.findOne({ website: "web", name: String(wert ?? "") });
+  const name = String(wert ?? "");
+  const quiz =
+    (await Quiz.findOne({ website: "web", subject: name })) ??
+    (await Quiz.findOne({ subject: name }));
   if (!quiz?._id) throw new Error(`Unknown quiz "${wert}"`);
   return new Types.ObjectId(String(quiz._id));
 }
@@ -31,7 +34,7 @@ export const createExercise = async (
     const exercise = await Exercise.create({
       ...req.body,
       quiz: quizId,
-      language: req.body.language ?? quiz?.language,
+      subject: req.body.subject ?? quiz?.subject,
       // Der Besitzer kommt immer aus dem Token, nie aus dem Request-Body.
       user: besitzerId(req),
     });
@@ -50,16 +53,22 @@ export const getAllExercises = async (
   res: Response
 ): Promise<void> => {
   try {
-    let filter: Record<string, unknown> = {};
+    const filter: Record<string, unknown> = {};
     const quiz = req.query.quiz;
-    if (typeof quiz === "string" && quiz) {
+    const subject = req.query.subject;
+    if (typeof subject === "string" && subject) {
+      // Alle Aufgaben eines Faches (Sprache oder Fach).
+      filter.subject = subject;
+    } else if (typeof quiz === "string" && quiz) {
       if (/^[0-9a-fA-F]{24}$/.test(quiz)) {
-        filter = { quiz: new Types.ObjectId(quiz) };
+        filter.quiz = new Types.ObjectId(quiz);
       } else {
-        const gefunden = await Quiz.findOne({ website: "web", name: quiz });
-        // Unbekannte Quiz-Namen liefern keine Aufgaben, sondern eine leere Liste.
-        if (!gefunden?._id) filter = { quiz: new Types.ObjectId() };
-        else filter = { quiz: gefunden._id };
+        const gefunden =
+          (await Quiz.findOne({ website: "web", subject: quiz })) ??
+          (await Quiz.findOne({ subject: quiz }));
+        // Ohne Quiz-Dokument (noch nicht migriert) nach dem Fach suchen.
+        if (!gefunden?._id) filter.subject = quiz;
+        else filter.quiz = gefunden._id;
       }
     }
     const exercises = await Exercise.find(filter);

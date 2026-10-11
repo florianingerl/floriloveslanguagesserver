@@ -37,6 +37,7 @@ import {
 import {
   createQuiz,
   getQuizById,
+  getQuizzes,
 } from "./src/controllers/TimeIT/QuizController";
 
 import {
@@ -46,6 +47,12 @@ import {
   getBookById,
   updateBook,
 } from "./src/controllers/TimeIT/BookController";
+
+import {
+  createBookStore,
+  getAllBookStores,
+  getBookStoreById,
+} from "./src/controllers/TimeIT/BookStoreController";
 
 
 import { exportToFacile } from "./src/controllers/TimeIT/ExportFacileController";
@@ -110,8 +117,10 @@ router.get("/api/exercise/:id", getExerciseById);
 router.put("/api/exercise/:id", authMiddleware, updateExercise);
 router.delete("/api/exercise/:id", authMiddleware, deleteExercise);
 // Quizze: angelegt werden vor allem die Buch-Quizze, gelesen werden sie fuer
-// die Anzeige im Buch (GET /api/quiz/:id).
+// die Anzeige im Buch (GET /api/quiz/:id) oder um das Website-Quiz eines Faches
+// zu finden (GET /api/quiz?website=web&subject=deutsch).
 router.post("/api/quiz", authMiddleware, createQuiz);
+router.get("/api/quiz", getQuizzes);
 router.get("/api/quiz/:id([0-9a-fA-F]{24})", getQuizById);
 // Buecher (gemeinsames Schreiben mit VueBookWriter).
 router.get("/api/book", getAllBooks);
@@ -119,6 +128,10 @@ router.get("/api/book/:id([0-9a-fA-F]{24})", getBookById);
 router.post("/api/book", authMiddleware, createBook);
 router.put("/api/book/:id([0-9a-fA-F]{24})", authMiddleware, updateBook);
 router.delete("/api/book/:id([0-9a-fA-F]{24})", authMiddleware, deleteBook);
+// Buchlaeden (buendeln die Buecher eines Faches).
+router.get("/api/bookstore", getAllBookStores);
+router.get("/api/bookstore/:id([0-9a-fA-F]{24})", getBookStoreById);
+router.post("/api/bookstore", authMiddleware, createBookStore);
 router.post("/api/user", createUser);
 router.get("/api/user", getAllUsers);
 router.get("/api/user/:id", getUserById);
