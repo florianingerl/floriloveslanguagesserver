@@ -5,10 +5,9 @@
 //   https://de.wikipedia.org/wiki/Aktivit%C3%A4tsdiagramm
 //
 // Jede Aufgabe bezieht sich auf einen Abschnitt des Artikels. Das imageUrl
-// ist das Bild, das in diesem Abschnitt angezeigt wird. Fuer die Abschnitte,
-// in denen der Artikel kein Bild zeigt, wird ein Bild aus der Klipy-API zum
-// Suchbegriff "UML Aktivit\u00e4tsdiagramm <Abschnitt>" bzw. ersatzweise
-// "UML activity diagramm" verwendet.
+// ist immer ein Bild aus dem Wikipedia-Artikel: Abschnitte, die ein eigenes
+// Bild zeigen, bekommen dieses Bild; alle anderen Abschnitte bekommen das
+// erste Bild des Artikels (das UML-2-Beispiel oben im Artikel).
 //
 // Der Lauf ist idempotent: Quiz und Thema werden wiederverwendet bzw. angelegt,
 // Aufgaben nur, wenn es noch keine mit derselben Frage im Fach gibt.
@@ -40,23 +39,16 @@ const WIKI_UML2 =
 const WIKI_UML1 =
   "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Uml-Activity-Beispiel1.svg/500px-Uml-Activity-Beispiel1.svg.png";
 
-// Ersatzbilder (Klipy-Suche "UML Aktivit\u00e4tsdiagramm"). Da die Suche zu
-// den Bild-freien Abschnitten jeweils dasselbe UML-Logo liefert, werden die
-// Varianten reihum verwendet.
-const KLIPY = [
-  "https://static.klipy.com/ii/e7539ef2aad336edaa067c28ee130b3c/46/59/EDrWWcHB1lL16AO.jpg",
-  "https://static.klipy.com/ii/e7539ef2aad336edaa067c28ee130b3c/c8/26/jL9WODReKstQlcx8Z.jpg",
-  "https://static.klipy.com/ii/e7539ef2aad336edaa067c28ee130b3c/b1/59/1SzNfunJuSbCB0sFG.jpg",
-  "https://static.klipy.com/ii/e7539ef2aad336edaa067c28ee130b3c/54/75/t9b43kD39B7gFZJuYL71.jpg",
-  "https://static.klipy.com/ii/cfb42878805dcb270f51b28683e7455a/93/0a/wD0aDthwKZgB9WHF5ea.jpg",
-];
+// Alle Aufgaben bekommen nur Bilder aus dem Wikipedia-Artikel. Abschnitte ohne
+// eigenes Bild (Allgemein, Symbole usw.) nutzen das erste Bild des Artikels:
+// das UML-2-Beispiel oben im Artikel.
 
 // Jede Aufgabe: der Abschnitt des Artikels, die Frage, die richtige Antwort
-// zuerst, danach die falschen Antworten, und das Bild (Klipy-Index oder URL).
+// zuerst, danach die falschen Antworten, und das Bild (aus dem Artikel).
 const EXERCISES = [
   {
     abschnitt: "Allgemein",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question:
       "Was wird mit einem Aktivit\u00e4tsdiagramm meist beschrieben?",
     optionen: [
@@ -68,7 +60,7 @@ const EXERCISES = [
   },
   {
     abschnitt: "Allgemein",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question:
       "Mit welchen Modellen ist die Semantik der Aktivit\u00e4tsdiagramme in UML 2 verwandt?",
     optionen: [
@@ -80,7 +72,7 @@ const EXERCISES = [
   },
   {
     abschnitt: "Symbole",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question: "Woraus besteht ein Aktivit\u00e4tsdiagramm?",
     optionen: [
       "aus Symbolen",
@@ -91,7 +83,7 @@ const EXERCISES = [
   },
   {
     abschnitt: "Startknoten",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question: "Wozu wird der Startknoten verwendet?",
     optionen: [
       "um den Startpunkt oder Anfangszustand einer Aktivit\u00e4t darzustellen",
@@ -102,7 +94,7 @@ const EXERCISES = [
   },
   {
     abschnitt: "Startknoten",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question: "Wodurch kann das Symbol des Startknotens erweitert werden?",
     optionen: [
       "durch ein Notizsymbol mit erkl\u00e4rendem Kommentar",
@@ -113,7 +105,7 @@ const EXERCISES = [
   },
   {
     abschnitt: "Aktivit\u00e4t",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question: "Wozu dient das Symbol der Aktivit\u00e4t?",
     optionen: [
       "zur Darstellung der Aktivit\u00e4ten des Prozesses",
@@ -124,7 +116,7 @@ const EXERCISES = [
   },
   {
     abschnitt: "Aktion",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question: "Wozu dient das Symbol der Aktion?",
     optionen: [
       "um die ausf\u00fchrbaren Teilbereiche einer Aktivit\u00e4t darzustellen",
@@ -135,7 +127,7 @@ const EXERCISES = [
   },
   {
     abschnitt: "Kontrollfluss",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question: "Wozu dient das Symbol des Kontrollflusses?",
     optionen: [
       "um den Kontrollfluss von einer Aktion zur anderen darzustellen",
@@ -146,7 +138,7 @@ const EXERCISES = [
   },
   {
     abschnitt: "Objektfluss",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question: "Wozu dient das Symbol des Objektflusses?",
     optionen: [
       "um den Weg von Objekten darzustellen, die sich durch die Aktivit\u00e4t bewegen",
@@ -157,7 +149,7 @@ const EXERCISES = [
   },
   {
     abschnitt: "Endknoten",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question: "Was markiert der Endknoten?",
     optionen: [
       "das Ende aller Kontrollfl\u00fcsse innerhalb der Aktivit\u00e4t",
@@ -168,7 +160,7 @@ const EXERCISES = [
   },
   {
     abschnitt: "Fluss-Endknoten",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question: "Was markiert ein Fluss-Endknoten?",
     optionen: [
       "das Ende eines einzelnen Kontrollflusses",
@@ -179,7 +171,7 @@ const EXERCISES = [
   },
   {
     abschnitt: "Entscheidungsknoten",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question:
       "In welcher Form wird eine bedingte Verzweigung im Kontrollfluss dargestellt?",
     optionen: [
@@ -191,7 +183,7 @@ const EXERCISES = [
   },
   {
     abschnitt: "Entscheidungsknoten",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question: "Wie viele Eing\u00e4nge und Ausg\u00e4nge hat ein Entscheidungsknoten?",
     optionen: [
       "einen Eingang und mehrere Ausg\u00e4nge",
@@ -202,7 +194,7 @@ const EXERCISES = [
   },
   {
     abschnitt: "Knoten verschmelzen",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question:
       "Wie viele Eing\u00e4nge und Ausg\u00e4nge hat das Symbol zum Verschmelzen von Knoten?",
     optionen: [
@@ -214,7 +206,7 @@ const EXERCISES = [
   },
   {
     abschnitt: "Gabel",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question: "Was bewirkt das Symbol der Gabel (Parallelisierung)?",
     optionen: [
       "es spaltet einen Aktivit\u00e4tsfluss in zwei oder mehr gleichzeitig ablaufende Aktivit\u00e4ten auf",
@@ -225,7 +217,7 @@ const EXERCISES = [
   },
   {
     abschnitt: "Zusammenf\u00fchren",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question: "Wie wird das Symbol zum Zusammenf\u00fchren dargestellt?",
     optionen: [
       "durch eine dicke vertikale oder horizontale Linie",
@@ -236,7 +228,7 @@ const EXERCISES = [
   },
   {
     abschnitt: "Senden von Signalen",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question: "Wozu dient die Aktion des Sendens von Signalen?",
     optionen: [
       "um das Senden eines Signals an eine annehmende Aktivit\u00e4t darzustellen",
@@ -247,7 +239,7 @@ const EXERCISES = [
   },
   {
     abschnitt: "Empfang von Signalen",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question:
       "Wann ist der von der Aktion des Signalempfangs ausgehende Kontrollfluss abgeschlossen?",
     optionen: [
@@ -259,7 +251,7 @@ const EXERCISES = [
   },
   {
     abschnitt: "Kommentar",
-    bild: "klipy",
+    bild: WIKI_UML2,
     question: "Wozu dient das Symbol des Kommentars?",
     optionen: [
       "um relevante Kommentare zu Elementen hinzuzuf\u00fcgen",
@@ -317,16 +309,6 @@ const dryRun = process.argv.includes("--dry-run");
 
 function options(liste) {
   return liste.map((option, i) => ({ option, correct: i === 0 }));
-}
-
-let klipyIndex = 0;
-function bildUrl(ex) {
-  if (ex.bild === "klipy") {
-    const url = KLIPY[klipyIndex % KLIPY.length];
-    klipyIndex++;
-    return url;
-  }
-  return ex.bild;
 }
 
 async function backup(db) {
@@ -416,7 +398,7 @@ async function main() {
   let angelegt = 0;
   let uebersprungen = 0;
   for (const ex of EXERCISES) {
-    const imageUrl = bildUrl(ex);
+    const imageUrl = ex.bild;
     const vorhanden = await exercises.findOne({ subject: SUBJECT, question: ex.question });
     if (vorhanden) {
       uebersprungen++;
