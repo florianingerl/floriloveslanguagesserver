@@ -25,7 +25,12 @@ const app = express();
 
 
 app.use(cors(corsOptions));
-app.use(express.json());
+// Hinter dem Reverse-Proxy stehen Protokoll und Host in x-forwarded-*; ohne
+// trust proxy wuerde req.protocol immer "http" liefern.
+app.set("trust proxy", true);
+// Bilder aus der Zwischenablage kommen als Base64 im JSON-Body an. Das ist
+// groesser als die Standardgrenze von 100 kb, deshalb wird sie angehoben.
+app.use(express.json({ limit: "12mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // Use the routes

@@ -57,6 +57,11 @@ import {
 
 import { exportToFacile } from "./src/controllers/TimeIT/ExportFacileController";
 
+import {
+  getImage,
+  uploadImage,
+} from "./src/controllers/TimeIT/ImageController";
+
 import authMiddleware from "./src/middleware/authMiddleware";
 
 const router = express.Router();
@@ -144,5 +149,9 @@ router.post("/api/createDictionaryPref", createDictPref );
 // Leitet den Test-Export an *facile.com weiter, weil der Browser das Cookie-Header
 // nicht setzen darf und die Seite keine CORS-Antworten schickt.
 router.post("/api/exportfacile", exportToFacile);
+// Bilder aus der Zwischenablage: hochladen (mit Token, mit Tageslimit) und
+// wieder ausliefern (oeffentlich).
+router.post("/api/image", authMiddleware, uploadImage);
+router.get("/api/image/:id([0-9a-fA-F]{24})", getImage);
 
 export default router;

@@ -142,6 +142,19 @@ export interface IDictPref extends IBaseModel {
   lg: string;
 }
 
+// Ein Bild, das ein Benutzer aus der Zwischenablage hochgeladen hat. Es wird
+// als BSON-Binary in MongoDB gehalten, damit das Backend keinen eigenen
+// Dateispeicher (Volume) braucht. Die Anzahl der Uploads pro Tag wird anhand
+// von createdAt gezaehlt (siehe ImageController).
+export interface IUploadedImage {
+  _id: string;
+  // Wer das Bild hochgeladen hat.
+  user: Types.ObjectId;
+  contentType: string;
+  data: Buffer;
+  createdAt: Date;
+}
+
 const DictPrefSchema: Schema = new Schema({
   dict: { type: Schema.Types.ObjectId, ref: "Dict" },
   dictUrl: { type: String, required: true },
@@ -162,6 +175,15 @@ const DictSchema: Schema = new Schema({
 
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
+});
+
+// Hochgeladene Bilder. Der Tageszaehler fragt ueber user + createdAt ab,
+// deshalb sind beide Felder indiziert.
+const UploadedImageSchema: Schema = new Schema({
+  user: { type: Types.ObjectId, ref: "User", required: true, index: true },
+  contentType: { type: String, required: true },
+  data: { type: Buffer, required: true },
+  createdAt: { type: Date, default: Date.now, index: true },
 });
 
 const ExerciseOptionSchema: Schema = new Schema(
@@ -288,6 +310,10 @@ const BookStore: Model<IBookStore> = connection.model<IBookStore>(
   "BookStore",
   BookStoreSchema
 );
+const UploadedImage: Model<IUploadedImage> = connection.model<IUploadedImage>(
+  "UploadedImage",
+  UploadedImageSchema
+);
 
 
-export { Exercise, User, Topic, Dict, DictPref, Quiz, Book, BookStore };
+export { Exercise, User, Topic, Dict, DictPref, Quiz, Book, BookStore, UploadedImage };
