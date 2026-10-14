@@ -46,6 +46,12 @@ export interface ITopic extends IBaseModel {
   tutorial: String;
   // Das Quiz, in dem das Thema angelegt wurde.
   quiz?: Types.ObjectId;
+  // Schule/Hochschule/Klasse des Themas, z.B. "Uni Aachen" oder
+  // "9.Klasse Gymnasium Bayern". Wird an Unterthemen vererbt.
+  school?: string;
+  // Das uebergeordnete Thema. Fehlt es, ist das Thema eine Wurzel. Damit
+  // lassen sich Unterthemen wie "Elektrotechnik->Dioden->Zehnerdiode" bauen.
+  parentId?: Types.ObjectId;
 }
 
 // Ein Quiz kann zu einer Website ("web") oder zu einem Buch ("book")
@@ -252,6 +258,10 @@ const TopicSchema : Schema = new Schema({
   tutorial: { type: String, required: false },
   // Das Quiz, in dem das Thema angelegt wurde.
   quiz: { type: Types.ObjectId, ref: "Quiz", required: false, index: true },
+  // Schule/Hochschule/Klasse des Themas. Wird an Unterthemen vererbt.
+  school: { type: String, required: false },
+  // Uebergeordnetes Thema (fuer Unterthemen). Fehlt = Wurzelthema.
+  parentId: { type: Types.ObjectId, ref: "Topic", required: false, index: true },
   // Wer das Topic angelegt hat. Nur dieser Benutzer darf es aendern oder loeschen.
   user: { type: Types.ObjectId, ref: "User", required: false, index: true }
 });
