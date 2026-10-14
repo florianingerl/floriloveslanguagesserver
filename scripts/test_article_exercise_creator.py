@@ -101,6 +101,34 @@ class ParseArticleTests(unittest.TestCase):
         self.assertEqual(blocks[2]["image"], "https://upload.example.org/a.png")
         self.assertEqual(blocks[3]["image"], "https://upload.example.org/a.png")
 
+    def test_stray_closing_tag_keeps_content(self):
+        # WordPress-Seiten enthalten oft ein einzelnes "</p>" ohne offenes <p>.
+        # Es darf den Inhaltsbereich nicht vorzeitig schliessen.
+        html = (
+            '<html lang="de"><head><title>Zeiger in C</title></head><body>'
+            '<article id="post-82"><header><h1>Zeiger in C</h1></header>'
+            '<div class="entry-content"><a name="224"></a></p>'
+            "<p>Ein Zeiger ist eine Variable, die die Adresse eines anderen "
+            "Wertes im Speicher speichert.</p>"
+            "<h2>Beispiel</h2>"
+            "<p>Der Zeiger zeigt dabei immer auf die Adresse der "
+            "urspruenglichen Variablen im Speicher.</p>"
+            '<img src="/img/zeiger.gif">'
+            "</div></article>"
+            "<footer><p>Dies ist ein Werbeabsatz, der lang genug ist, um "
+            "sonst als Inhalt aufzufallen.</p></footer>"
+            "</body></html>"
+        )
+        article = m.parse_article(html, "https://example.org/zeiger/")
+        texts = [b["text"] for b in article["blocks"]]
+        self.assertEqual(len(article["blocks"]), 2)
+        self.assertIn("Ein Zeiger ist eine Variable", texts[0])
+        self.assertIn("Der Zeiger zeigt dabei", texts[1])
+        for block in article["blocks"]:
+            self.assertNotIn("Werbeabsatz", block["text"])
+        self.assertEqual(article["first_image"], "https://example.org/img/zeiger.gif")
+        self.assertEqual(article["blocks"][0]["image"], "https://example.org/img/zeiger.gif")
+
     def test_page_without_content_root(self):
         article = m.parse_article(NO_ROOT_HTML, "https://example.org/p")
         self.assertEqual(article["title"], "Plain page")

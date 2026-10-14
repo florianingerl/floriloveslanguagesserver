@@ -171,6 +171,12 @@ class _ArticleParser(HTMLParser):
                 self._buffer = []
 
     def handle_endtag(self, tag):
+        # Schliessende Tags ohne passendes offenes Tag ignorieren. Sonst
+        # wuerde z.B. ein einzelnes "</p>" im HTML den Inhaltsbereich
+        # (article/main) vorzeitig vom Stack nehmen.
+        if not any(entry[0] == tag for entry in self._stack):
+            return
+
         # Passenden Eintrag vom Tag-Stack nehmen und Zaehler anpassen.
         popped = []
         while self._stack:
@@ -263,7 +269,11 @@ def parse_article(html_text, base_url):
 
     events = parser.events
     if parser.root_seen:
-        events = [e for e in events if e["in_root"]]
+        in_root = [e for e in events if e["in_root"]]
+        # Falls die Erkennung des Inhaltsbereichs fehlschlaegt (kaputtes
+        # HTML), lieber alles verwenden als gar nichts.
+        if in_root:
+            events = in_root
 
     title = (parser.title or "").strip() or base_url
     first_image = next(
