@@ -46,9 +46,6 @@ export interface ITopic extends IBaseModel {
   tutorial: String;
   // Das Quiz, in dem das Thema angelegt wurde.
   quiz?: Types.ObjectId;
-  // Schule/Hochschule/Klasse des Themas, z.B. "Uni Aachen" oder
-  // "9.Klasse Gymnasium Bayern". Wird an Unterthemen vererbt.
-  school?: string;
   // Das uebergeordnete Thema. Fehlt es, ist das Thema eine Wurzel. Damit
   // lassen sich Unterthemen wie "Elektrotechnik->Dioden->Zehnerdiode" bauen.
   parentId?: Types.ObjectId;
@@ -90,6 +87,15 @@ export interface IBookStore {
   updatedAt?: Date;
 }
 
+// Eine Schule/Hochschule/Klasse, z.B. "9.Klasse Gymnasium Bayern". Die
+// Aufgaben tragen ihre Schule ueber die _id dieses Dokuments.
+export interface ISchool {
+  _id: string;
+  name: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export interface IBook {
   _id: string;
   name: string;
@@ -114,6 +120,9 @@ export interface IExercise extends IBaseModel {
   type: string;
   imageUrl: string;
   topic?: Types.ObjectId;
+  // Schule/Hochschule/Klasse der Aufgabe. Die Schule steckt in einem eigenen
+  // Dokument (School); die Aufgabe speichert dessen _id.
+  school?: Types.ObjectId;
   instruction?: string;
   gapText?: string;
   question?: string;
@@ -240,6 +249,13 @@ const BookStoreSchema: Schema = new Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
+// Schulen/Hochschulen/Klassen, aus denen die Aufgaben ihre Schule auswaehlen.
+const SchoolSchema: Schema = new Schema({
+  name: { type: String, required: true, index: true },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
 const BookSchema: Schema = new Schema({
   name: { type: String, required: true },
   subject: { type: String, required: true, index: true },
@@ -258,8 +274,6 @@ const TopicSchema : Schema = new Schema({
   tutorial: { type: String, required: false },
   // Das Quiz, in dem das Thema angelegt wurde.
   quiz: { type: Types.ObjectId, ref: "Quiz", required: false, index: true },
-  // Schule/Hochschule/Klasse des Themas. Wird an Unterthemen vererbt.
-  school: { type: String, required: false },
   // Uebergeordnetes Thema (fuer Unterthemen). Fehlt = Wurzelthema.
   parentId: { type: Types.ObjectId, ref: "Topic", required: false, index: true },
   // Wer das Topic angelegt hat. Nur dieser Benutzer darf es aendern oder loeschen.
@@ -274,6 +288,8 @@ const ExerciseSchema: Schema = new Schema({
   // Ein Absatz kann auch ohne Topic gespeichert werden (z.B. die Aufgabe eines
   // Buch-Quizzes), deshalb ist das Feld nicht mehr verpflichtend.
   topic: { type: Types.ObjectId, required: false },
+  // Schule/Hochschule/Klasse der Aufgabe (siehe School-Dokument).
+  school: { type: Types.ObjectId, ref: "School", required: false },
   // Wer die Aufgabe angelegt hat. Nur dieser Benutzer darf sie aendern oder loeschen.
   user: { type: Types.ObjectId, ref: "User", required: false, index: true },
   instruction: { type: String, required: false },
@@ -320,10 +336,14 @@ const BookStore: Model<IBookStore> = connection.model<IBookStore>(
   "BookStore",
   BookStoreSchema
 );
+const School: Model<ISchool> = connection.model<ISchool>(
+  "School",
+  SchoolSchema
+);
 const UploadedImage: Model<IUploadedImage> = connection.model<IUploadedImage>(
   "UploadedImage",
   UploadedImageSchema
 );
 
 
-export { Exercise, User, Topic, Dict, DictPref, Quiz, Book, BookStore, UploadedImage };
+export { Exercise, User, Topic, Dict, DictPref, Quiz, Book, BookStore, School, UploadedImage };

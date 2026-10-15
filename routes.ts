@@ -54,6 +54,11 @@ import {
   getBookStoreById,
 } from "./src/controllers/TimeIT/BookStoreController";
 
+import {
+  createSchool,
+  getAllSchools,
+} from "./src/controllers/TimeIT/SchoolController";
+
 
 import { exportToFacile } from "./src/controllers/TimeIT/ExportFacileController";
 
@@ -137,6 +142,9 @@ router.delete("/api/book/:id([0-9a-fA-F]{24})", authMiddleware, deleteBook);
 router.get("/api/bookstore", getAllBookStores);
 router.get("/api/bookstore/:id([0-9a-fA-F]{24})", getBookStoreById);
 router.post("/api/bookstore", authMiddleware, createBookStore);
+// Schulen: Auswahlliste fuer die Schule einer Aufgabe.
+router.get("/api/school", getAllSchools);
+router.post("/api/school", authMiddleware, createSchool);
 router.post("/api/user", createUser);
 router.get("/api/user", getAllUsers);
 router.get("/api/user/:id", getUserById);

@@ -38,6 +38,9 @@ export const createExercise = async (
       // Der Besitzer kommt immer aus dem Token, nie aus dem Request-Body.
       user: besitzerId(req),
     });
+    // Die Schule wird als Objekt zurueckgeliefert, damit das Frontend
+    // gleich den Namen anzeigen kann.
+    await exercise.populate("school");
     res.status(201).json(exercise);
   } catch (error) {
     if (error instanceof Error) {
@@ -71,7 +74,7 @@ export const getAllExercises = async (
         else filter.quiz = gefunden._id;
       }
     }
-    const exercises = await Exercise.find(filter);
+    const exercises = await Exercise.find(filter).populate("school");
     res.json(exercises);
   } catch (error) {
     if (error instanceof Error) {
@@ -87,7 +90,7 @@ export const getExerciseById = async (
   res: Response
 ): Promise<void> => {
   try {
-    const exercise = await Exercise.findById(req.params.id);
+    const exercise = await Exercise.findById(req.params.id).populate("school");
     if (!exercise) {
       res.status(404).json({ message: "Exercise not found" });
       return;
@@ -132,6 +135,7 @@ export const updateExercise = async (
       res.status(404).json({ message: "Exercise not found" });
       return;
     }
+    await exercise.populate("school");
     res.json(exercise);
   } catch (error) {
     if (error instanceof Error) {
