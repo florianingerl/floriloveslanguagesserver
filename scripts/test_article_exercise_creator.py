@@ -213,11 +213,12 @@ class BuildDocsTests(unittest.TestCase):
         now = m.datetime(2026, 1, 1, tzinfo=m.timezone.utc)
         doc = m.build_topic_doc(
             "quiz1", "informatics", "Aktivit\u00e4tsdiagramm",
-            '<a href="u">Aktivit\u00e4tsdiagramm</a>', "Uni Aachen", "user1", now,
+            '<a href="u">Aktivit\u00e4tsdiagramm</a>', "user1", now,
         )
         self.assertEqual(doc["subject"], "informatics")
         self.assertEqual(doc["title"], "Aktivit\u00e4tsdiagramm")
-        self.assertEqual(doc["school"], "Uni Aachen")
+        # Die Schule steht nicht mehr am Thema, sondern an der Aufgabe.
+        self.assertNotIn("school", doc)
         self.assertEqual(doc["quiz"], "quiz1")
         self.assertEqual(doc["user"], "user1")
         self.assertEqual(doc["tutorial"], '<a href="u">Aktivit\u00e4tsdiagramm</a>')
@@ -239,6 +240,8 @@ class BuildDocsTests(unittest.TestCase):
         self.assertEqual(first["quiz"], "quiz1")
         self.assertEqual(first["subject"], "informatics")
         self.assertEqual(first["topic"], "topic1")
+        # Ohne Schule bleibt das Feld weg (wird erst im Pipeline-Schritt gesetzt).
+        self.assertNotIn("school", first)
         self.assertEqual(first["imageUrl"], "https://x/a.png")
         self.assertEqual(first["instruction"], m.DEFAULT_INSTRUCTION)
         self.assertEqual(
@@ -252,6 +255,145 @@ class BuildDocsTests(unittest.TestCase):
         )
         # Zweiter Abschnitt hat kein eigenes Bild -> erstes Artikelbild.
         self.assertEqual(docs[1]["imageUrl"], "https://x/first.png")
+
+
+class _FakeInsertResult:
+    def __init__(self, inserted_id):
+        self.inserted_id = inserted_id
+
+
+class _FakeCollection:
+    """Minimales Abbild einer Mongo-Collection fuer die Tests."""
+
+    def __init__(self, docs=None):
+        self.docs = [dict(d) for d in (docs or [])]
+
+    def find_one(self, query):
+        for doc in self.docs:
+            if all(doc.get(k) == v for k, v in query.items()):
+                return doc
+        return None
+
+    def insert_one(self, doc):
+        doc = dict(doc)
+        doc.setdefault("_id", "id-%d" % (len(self.docs) + 1))
+        self.docs.append(doc)
+        return _FakeInsertResult(doc["_id"])
+
+    def update_one(self, query, update):
+        doc = self.find_one(query)
+        if doc is None:
+            return
+        doc.update(update.get("$set", {}))
+        for key in update.get("$unset", {}):
+            doc.pop(key, None)
+
+
+class _FakeDb:
+    def __init__(self):
+        self.collections = {}
+
+    def __getitem__(self, name):
+        return self.collections.setdefault(name, _FakeCollection())
+
+
+class _FakeClient:
+    def close(self):
+        pass
+
+
+class ResolveSchoolTests(unittest.TestCase):
+    def test_empty_name_returns_none_without_creating(self):
+        db = _FakeDb()
+        self.assertIsNone(m.resolve_school_id(db, None))
+        self.assertIsNone(m.resolve_school_id(db, ""))
+        self.assertIsNone(m.resolve_school_id(db, "   "))
+        self.assertNotIn("schools", db.collections)
+
+    def test_creates_school_and_reuses_it(self):
+        db = _FakeDb()
+        now = m.datetime(2026, 1, 1, tzinfo=m.timezone.utc)
+        first = m.resolve_school_id(db, " Uni Aachen ", now)
+        self.assertIsNotNone(first)
+        # Derselbe Name (ohne Leerzeichen) liefert dieselbe _id, kein Duplikat.
+        again = m.resolve_school_id(db, "Uni Aachen", now)
+        self.assertEqual(first, again)
+        self.assertEqual(len(db.collections["schools"].docs), 1)
+        self.assertEqual(db.collections["schools"].docs[0]["name"], "Uni Aachen")
+
+
+class PipelineSchoolTests(unittest.TestCase):
+    def test_school_id_lands_on_exercises_not_on_topic(self):
+        def fake_generator(messages):
+            return json.dumps([
+                {"block": 0, "question": "Was ist ein Diagramm?",
+                 "options": ["A", "B", "C", "D"], "correct": 0}
+            ])
+
+        db = _FakeDb()
+        db.collections["users"] = _FakeCollection(
+            [{"_id": "user1", "email": m.DEFAULT_OWNER_EMAIL}]
+        )
+        captured = {}
+
+        def fake_upsert_topic(_db, topic_doc):
+            captured["topic_doc"] = topic_doc
+            return "topic1", True
+
+        def fake_insert_exercises(_db, docs):
+            captured["exercise_docs"] = docs
+            return len(docs), 0
+
+        with mock.patch.object(m, "fetch_article", return_value=WIKI_HTML), \
+                mock.patch.object(m, "connect", return_value=_FakeClient()), \
+                mock.patch.object(m, "get_db", return_value=db), \
+                mock.patch.object(m, "upsert_topic", side_effect=fake_upsert_topic), \
+                mock.patch.object(m, "insert_exercises", side_effect=fake_insert_exercises):
+            result = m.create_for_article(
+                "https://de.wikipedia.org/wiki/A", "Uni Aachen",
+                {"_id": "q1", "subject": "informatics"},
+                backend="cli", generator=fake_generator, log=lambda *a: None,
+            )
+
+        self.assertEqual(result["created"], 1)
+        # Das Thema traegt keine Schule mehr.
+        self.assertNotIn("school", captured["topic_doc"])
+        # Die Aufgabe traegt die _id des (neu angelegten) School-Dokuments.
+        school_docs = db.collections["schools"].docs
+        self.assertEqual(len(school_docs), 1)
+        self.assertEqual(school_docs[0]["name"], "Uni Aachen")
+        self.assertEqual(captured["exercise_docs"][0]["school"], school_docs[0]["_id"])
+
+    def test_without_school_no_school_field(self):
+        def fake_generator(messages):
+            return json.dumps([
+                {"block": 0, "question": "Frage?",
+                 "options": ["A", "B", "C", "D"], "correct": 0}
+            ])
+
+        db = _FakeDb()
+        db.collections["users"] = _FakeCollection(
+            [{"_id": "user1", "email": m.DEFAULT_OWNER_EMAIL}]
+        )
+        captured = {}
+
+        def fake_insert_exercises(_db, docs):
+            captured["exercise_docs"] = docs
+            return len(docs), 0
+
+        with mock.patch.object(m, "fetch_article", return_value=WIKI_HTML), \
+                mock.patch.object(m, "connect", return_value=_FakeClient()), \
+                mock.patch.object(m, "get_db", return_value=db), \
+                mock.patch.object(m, "upsert_topic", return_value=("topic1", True)), \
+                mock.patch.object(m, "insert_exercises", side_effect=fake_insert_exercises):
+            m.create_for_article(
+                "https://de.wikipedia.org/wiki/A", "",
+                {"_id": "q1", "subject": "informatics"},
+                backend="cli", generator=fake_generator, log=lambda *a: None,
+            )
+
+        self.assertNotIn("schools", db.collections)
+        self.assertNotIn("school", captured["exercise_docs"][0])
 
 
 class ApiKeyTests(unittest.TestCase):

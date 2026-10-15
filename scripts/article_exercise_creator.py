@@ -10,6 +10,10 @@ Fragen in der Sprache des Artikels) und das Ergebnis als Thema (Titel des
 Artikels) samt Aufgaben in MongoDB gespeichert - so wie es zuvor mit den
 Anweisungen in "InstructionToCreateExercisesOnActivityDiagrams" gemacht wurde.
 
+Die im Feld "Schule" angegebene Schule wird als School-Dokument nachgeschlagen
+(oder neu angelegt) und als Schule jeder erzeugten Aufgabe zugeordnet; das
+Thema selbst traegt keine Schule mehr.
+
 Das Modell wird auf zwei Wegen erreicht (Option --backend):
 
     * "cli"  (Standard): startet "opencode run" mit dem Modell big-pickle.
@@ -430,14 +434,18 @@ def _image_for(item, blocks, first_image):
     return first_image
 
 
-def build_topic_doc(quiz_id, subject, title, tutorial, school, owner_id, now):
-    """Baut das Topic-Dokument fuer die Datenbank."""
+def build_topic_doc(quiz_id, subject, title, tutorial, owner_id, now):
+    """Baut das Topic-Dokument fuer die Datenbank.
+
+    Die Schule gehoert seit der Umstellung nicht mehr zum Thema, sondern zu
+    den einzelnen Aufgaben (siehe resolve_school_id und create_for_article).
+    Deshalb steht hier bewusst kein "school"-Feld mehr.
+    """
     return {
         "subject": subject,
         "title": title,
         "tutorial": tutorial,
         "quiz": quiz_id,
-        "school": school,
         "user": owner_id,
         "createdAt": now,
         "updatedAt": now,
@@ -686,6 +694,29 @@ def find_owner_id(db, email=DEFAULT_OWNER_EMAIL):
     return owner["_id"] if owner else None
 
 
+def resolve_school_id(db, name, now=None):
+    """Liefert die _id der Schule; legt sie an, wenn der Name neu ist.
+
+    Die Aufgaben speichern die Schule als ObjectId (Verweis auf das
+    School-Dokument, Sammlung "schools"). Leere Namen ergeben None, damit
+    Aufgaben ohne Schule einfach kein "school"-Feld bekommen.
+    """
+    if name is None:
+        return None
+    name = name.strip()
+    if not name:
+        return None
+    schools = db["schools"]
+    existing = schools.find_one({"name": name})
+    if existing:
+        return existing["_id"]
+    now = now or datetime.now(timezone.utc)
+    inserted = schools.insert_one(
+        {"name": name, "createdAt": now, "updatedAt": now}
+    )
+    return inserted.inserted_id
+
+
 def upsert_topic(db, topic_doc):
     """Legt das Thema an oder aktualisiert es; liefert die _id."""
     topics = db["topics"]
@@ -704,11 +735,12 @@ def upsert_topic(db, topic_doc):
             {
                 "$set": {
                     "tutorial": topic_doc["tutorial"],
-                    "school": topic_doc["school"],
                     "quiz": topic_doc["quiz"],
                     "user": topic_doc["user"],
                     "updatedAt": topic_doc["updatedAt"],
-                }
+                },
+                # Das Thema traegt keine Schule mehr; alte Werte entfernen.
+                "$unset": {"school": ""},
             },
         )
         return existing["_id"], False
@@ -783,7 +815,7 @@ def create_for_article(
     tutorial = '<a href="%s">%s</a>' % (url, article["title"])
 
     topic_doc = build_topic_doc(
-        quiz_id, subject, article["title"], tutorial, schule, None, now
+        quiz_id, subject, article["title"], tutorial, None, now
     )
     exercise_docs = build_exercise_docs(
         quiz_id, subject, None, None, items, blocks, article["first_image"], now
@@ -805,8 +837,14 @@ def create_for_article(
             log("Warnung: kein Benutzer mit E-Mail %s gefunden." % owner_email)
 
         topic_doc["user"] = owner_id
+
+        # Die Schule gehoert zur Aufgabe: Name nachschlagen (oder neu anlegen)
+        # und die _id in jedem Aufgaben-Dokument speichern.
+        school_id = resolve_school_id(db, schule, now)
         for doc in exercise_docs:
             doc["user"] = owner_id
+            if school_id is not None:
+                doc["school"] = school_id
 
         topic_id, topic_created = upsert_topic(db, topic_doc)
         for doc in exercise_docs:
