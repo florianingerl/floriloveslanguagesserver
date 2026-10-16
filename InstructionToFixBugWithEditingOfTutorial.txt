@@ -1,0 +1,4 @@
+If I switch to the tab "Tutorial" in a quiz, and then click on the edit button,
+the JoditEditor isn't visible after that.
+Instead, only the "Filter for topic stuff" is visible !
+Can you please write tests to reproduce this bug, then fix the test, commit and posh !

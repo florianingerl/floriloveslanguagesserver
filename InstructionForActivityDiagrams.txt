@@ -1,0 +1,20 @@
+In my Informatik section for the univerity.
+Can you add a quiz for "Informatik" to the user interface and to the database !
+
+Then create a topic "UML - Activity diagrams". 
+And then please create exercises of type multiple choice for that topic, that can be solved
+by someone, who has read this wikipedia page: https://en.wikipedia.org/wiki/Activity_diagram
+When creating exercises for a certain paragraph, please set exercise.imageUrl to the image, that is displayed in this paragraph.
+
+Else take simply the first picture of the article.
+
+As tutorial for the topic, simply set topic.tutorial="<a href="https://en.wikipedia.org/wiki/Activity_diagram">Wikipedia artice on activity diagrams</a>
+
+Everything that you insert now into the database should be in English now !
+
+Go ahead ! Please insert it into the database !
+
+Then do the same (the same as you just did for the Wikipedia article ) for this arcticle https://www.visual-paradigm.com/guide/uml-unified-modeling-language/what-is-activity-diagram/ and add a link to this article
+in the tutorial ! (so that the tutorial now contains two links ! )
+
+

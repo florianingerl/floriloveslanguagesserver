@@ -1,0 +1,16 @@
+Can you please create a quiz for the section "Physik" in the university.
+
+Then create topics and exercises.
+
+The topics you find in these lecture notes "C:\Users\imelf\Documents\NachhilfePhysikUni\Joaquin\Script-Physics-1-THD-Zabler_Finish.pdf"
+You can ignore Mechanics, only the topics on Electromagnetism are relevant.
+Prepend "Hochschule Regensburg -" in front of every topic.title. Add also topic.tutorial.
+For each topic, create only multiple choice exercises.
+
+For each exercise find a picture, that really has something to do with the exercise, on the web and set exercise.imageUrl to the picture you have found.
+Maybe take a "Fachbegriff" that appears in the question of the exercise, do a google search for pictures on that "Fachbegriff" and
+then take the first hit.
+But that is only a suggestion of mine !
+
+Everything you insert now into the database should be in English !
+Go ahead ! Insert everything into the database !

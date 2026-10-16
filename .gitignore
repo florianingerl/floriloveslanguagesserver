@@ -20,3 +20,5 @@ scripts/italian/
 
 # Altbestand der Seed-Daten
 seed/exercises.json
+
+scripts/__pycache__/

@@ -1,0 +1,9 @@
+Can you create exercices and a tutorial on the Topic
+"Que, quel/le/s/les ou le/la/lesquel/le/les" for the French quiz.
+It should be all multiple choice exercises where the question has exactly
+one gap (a gap is ___ three underscores in a row) and the correct solution is
+what has to come into the gap.
+Take a random image from Klippy (e.g with search string "harry potter"), that has a description, so you know what is on the picture. Then create an exercise that has something to do with that description and with the topic.
+
+Everything that you insert into the database should be in French, including the topic.title, the topic.tutorial, and exercise.question and all the options of the exercise !
+Go ahead ! Please insert all this into the database !

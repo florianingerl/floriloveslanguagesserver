@@ -1,0 +1,25 @@
+Can you create exercises in the French quiz for the following topics:
+
+stellen erfüllbare und nicht erfüllbare Bedingungen und Hypothesen, auch in der Vergangenheit, auf:
+conditionnel présent et passé
+les propositions de condition (types I, II et III)
+sprechen über bereits Genanntes und vermeiden Wiederholungen:
+pronoms adverbiaux « y » / « en »
+stellen zeitliche Bezüge zwischen Handlungen her und drücken sie aus:
+futur simple
+verbes irréguliers : « s’en aller », « fuir », « recevoir », « suivre »
+
+Insert also tutorial for the topics into the database.
+
+For an exercise, find a random image on Klippy ( for example by using the search string "vacances") where Klippy provides a 
+description of the image too, so you know exactly what is in the image. Then create a sentence that has something to do with
+the image and with the topic.
+
+Create Matching Exercises, Multiple Choice exercises and a few ( but not many gapText exercises), which should all be mixed.
+
+The exercises are for "9.Klasse Gymnasium Bayern". They use the book "Découvertes". On this website https://www.lehrplanplus.bayern.de/fachlehrplan/gymnasium/9/franzoesisch/2-fremdsprache
+you find all the grammar topics, they need to master. (so please ignore everything else but the grammar f9 part of this website).
+Append "9.Klasse Gymnasium Bayern -" before each topic title.
+
+Everything that you insert now into the database should be in French.
+Go ahead ! Insert everything into the DB.

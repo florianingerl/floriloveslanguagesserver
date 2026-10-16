@@ -1,0 +1,14 @@
+In my Informatik-quiz for the univerity.
+
+Then create a topic "UML - Aktivitätsdiagramme". 
+And then please create exercises of type multiple choice for that topic, that can be solved
+by someone, who has read this wikipedia page: https://de.wikipedia.org/wiki/Aktivit%C3%A4tsdiagramm
+When creating exercises for a certain paragraph, please set exercise.imageUrl to the image, that is displayed in this paragraph.
+If there is no image in a paragraph, simply take the first picture of the article.
+
+As tutorial for the topic, simply set topic.tutorial="<a href="https://de.wikipedia.org/wiki/Aktivit%C3%A4tsdiagramm">Wikipedia-Artikel über Aktivitätsdiagramme</a>
+
+Everything that you insert now into the database should be in the language of the article !
+
+Go ahead ! Please insert everything into the database using mongosh with the connection string mongodb+srv://flori:ABC@cluster0.p9bpe.mongodb.net/ ! Tell the user immediately if you can't access this database via mongosh, so that the user can add his current ip address to the list of allowed ip adresses in DB Atlas !
+

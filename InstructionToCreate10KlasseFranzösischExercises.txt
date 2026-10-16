@@ -1,0 +1,21 @@
+Can you create exercises in the French quiz for the following 3 topics:
+
+äußern Wünsche und Zweifel, geben Ratschläge, werten und bringen Gefühle zum Ausdruck:
+- formation du subjonctif présent
+- principaux déclencheurs du subjonctif (aussi conjonctions)
+- verbes irréguliers : « craindre », « se plaindre »
+
+Insert also tutorial for the three topics into the database.
+
+For an exercise, find a random image on Klippy ( for example by using the search string "harry potter") where Klippy provides a 
+description of the image too, so you know exactly what is in the image. Then create a sentence that has something to do with
+the image and with the topic.
+
+Create Matching Exercises, Multiple Choice exercises and a few ( but not many gapText exercises), which should all be mixed.
+
+The exercises are for "10.Klasse Gymnasium Bayern". They use the book "Découvertes". On this website https://www.lehrplanplus.bayern.de/fachlehrplan/gymnasium/10/franzoesisch/1-2-fremdsprache
+you find all the grammar topics, they need to master. (so please ignore everything else but the grammar f10 part of this website). If possible, you can create exercises for the other grammar topics too !
+Append "10.Klasse Gymnasium Bayern -" before each topic title.
+
+Everything that you insert now into the database should be in French.
+Go ahead ! Insert everything into the DB.
