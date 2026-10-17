@@ -34,7 +34,8 @@ jobs:
             "$DEPLOY_USER@$DEPLOY_HOST" 'bash -se' <<'REMOTE'
           set -eu
           cd /var/www/floriloveslanguagesserver
-          git pull --ff-only origin main
+          git fetch --prune origin main
+          git checkout --force -B main origin/main
           npm install
           npm run build
           sudo -n /usr/bin/systemctl restart floriloveslanguagesserver
