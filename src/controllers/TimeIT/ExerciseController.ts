@@ -5,7 +5,7 @@ import { AuthenticatedRequest } from "./AuthController";
 import {
   besitzer as besitzerVon,
   besitzerId,
-  besitzPruefen,
+  besitzPruefenMitAdmin,
 } from "../../helpers/ownership";
 
 // Eine quiz-Angabe kann eine 24-stellige Mongo-Id sein (neu) oder das Fach
@@ -116,7 +116,7 @@ export const updateExercise = async (
       res.status(404).json({ message: "Exercise not found" });
       return;
     }
-    if (!besitzPruefen(req, res, vorhanden.user, "exercise")) {
+    if (!(await besitzPruefenMitAdmin(req, res, vorhanden.user, "exercise"))) {
       return;
     }
 
@@ -156,7 +156,7 @@ export const deleteExercise = async (
       res.status(404).json({ message: "Exercise not found" });
       return;
     }
-    if (!besitzPruefen(req, res, vorhanden.user, "exercise")) {
+    if (!(await besitzPruefenMitAdmin(req, res, vorhanden.user, "exercise"))) {
       return;
     }
 
