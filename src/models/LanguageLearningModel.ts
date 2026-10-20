@@ -123,9 +123,8 @@ export interface IExercise extends IBaseModel {
   // Schule/Hochschule/Klasse der Aufgabe. Die Schule steckt in einem eigenen
   // Dokument (School); die Aufgabe speichert dessen _id.
   school?: Types.ObjectId;
-  instruction?: string;
   gapText?: string;
-  question?: string;
+  questionOrInstruction: string;
   questionEn?: string;
   questionFr?: string;
   options?: IExerciseOption[];
@@ -292,9 +291,8 @@ const ExerciseSchema: Schema = new Schema({
   school: { type: Types.ObjectId, ref: "School", required: false },
   // Wer die Aufgabe angelegt hat. Nur dieser Benutzer darf sie aendern oder loeschen.
   user: { type: Types.ObjectId, ref: "User", required: false, index: true },
-  instruction: { type: String, required: false },
+  questionOrInstruction: { type: String, required: false },
   gapText: { type: String, required: false },
-  question: { type: String, required: false },
   questionEn: { type: String, required: false },
   questionFr: { type: String, required: false },
   options: { type: [ExerciseOptionSchema], required: false },
