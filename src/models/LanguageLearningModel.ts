@@ -142,6 +142,9 @@ export interface IUser extends IBaseModel {
   password: string;
   role: UserRole;
   isAdmin: boolean;
+  emailVerified?: boolean;
+  verificationCodeHash?: string;
+  verificationExpiresAt?: Date;
 }
 
 export interface IDict extends IBaseModel {
@@ -315,6 +318,9 @@ const UserSchema: Schema = new Schema({
   password: { type: String, required: true },
   role: { type: String, required: true },
   isAdmin: { type: Boolean, required: true },
+  emailVerified: { type: Boolean, required: false },
+  verificationCodeHash: { type: String, required: false },
+  verificationExpiresAt: { type: Date, required: false },
  // tags: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tag" }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },

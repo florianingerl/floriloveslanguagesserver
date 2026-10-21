@@ -74,6 +74,8 @@ const router = express.Router();
 // Auth routes
 router.post("/api/register", AuthController.register);
 router.post("/api/login", AuthController.login);
+router.post("/api/verifyemail", AuthController.verifyEmail);
+router.post("/api/resendverification", AuthController.resendVerification);
 router.get(
   "/api/auth/user",
   authMiddleware,

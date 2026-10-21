@@ -32,7 +32,9 @@
     "test:threeinarow": "ts-node src/threeInARow/gameLogic.test.ts",
     "test:threeinarow:smoke": "ts-node scripts/threeinarow-smoke.ts",
     "test:imagelimit": "ts-node src/helpers/imageLimit.test.ts",
-    "test:ownership": "ts-node src/helpers/ownership.test.ts"
+    "test:ownership": "ts-node src/helpers/ownership.test.ts",
+    "test:verification": "ts-node src/mails/verification.test.ts",
+    "gmailtoken": "node scripts/get-gmail-token.cjs"
   },
   "keywords": [
     "node js",
@@ -46,6 +48,7 @@
   "author": "nekagit",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/local-auth": "^2.1.0",
     "@netlify/functions": "^2.6.0",
     "@types/axios": "^0.14.4",
     "@types/mongoose": "^5.11.97",
@@ -55,6 +58,7 @@
     "date-fns": "^3.6.0",
     "dotenv": "^17.4.2",
     "express": "^4.21.0",
+    "googleapis": "^105.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.0",
     "nodemon": "^3.1.0",

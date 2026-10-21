@@ -22,3 +22,10 @@ scripts/italian/
 seed/exercises.json
 
 scripts/__pycache__/
+
+# Secrets – duerfen nie im Repository landen
+.env
+.env.*
+!.env.example
+credentials.json
+token.json
