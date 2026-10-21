@@ -1,0 +1,352 @@
+[
+  {
+    "_id": {
+      "$oid": "6acc16c3297ffa5fb03baa85"
+    },
+    "quiz": {
+      "$oid": "6acc16c3297ffa5fb03baa82"
+    },
+    "subject": "deutsch",
+    "type": "multipleChoice",
+    "imageUrl": "",
+    "instruction": "Waehle die richtige Antwort.",
+    "question": "Was zaehlte der Junge am Fenster?",
+    "options": [
+      {
+        "option": "Sterne",
+        "correct": true
+      },
+      {
+        "option": "Schafe",
+        "correct": false
+      },
+      {
+        "option": "Wolken",
+        "correct": false
+      }
+    ],
+    "sentences": [],
+    "guessedSentences": [],
+    "createdAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6acc16c3297ffa5fb03baa86"
+    },
+    "quiz": {
+      "$oid": "6acc16c3297ffa5fb03baa82"
+    },
+    "subject": "deutsch",
+    "type": "multipleChoice",
+    "imageUrl": "",
+    "instruction": "Waehle die richtige Antwort.",
+    "question": "Wie fuehlte sich der Junge, wenn er schrieb?",
+    "options": [
+      {
+        "option": "traurig",
+        "correct": false
+      },
+      {
+        "option": "gluecklich",
+        "correct": true
+      },
+      {
+        "option": "muede",
+        "correct": false
+      }
+    ],
+    "sentences": [],
+    "guessedSentences": [],
+    "createdAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6acc16c3297ffa5fb03baa87"
+    },
+    "quiz": {
+      "$oid": "6acc16c3297ffa5fb03baa82"
+    },
+    "subject": "deutsch",
+    "type": "multipleChoice",
+    "imageUrl": "",
+    "instruction": "Waehle die richtige Antwort.",
+    "question": "Wie alt war das Buch?",
+    "options": [
+      {
+        "option": "brandneu",
+        "correct": false
+      },
+      {
+        "option": "alt",
+        "correct": true
+      },
+      {
+        "option": "leer",
+        "correct": false
+      }
+    ],
+    "sentences": [],
+    "guessedSentences": [],
+    "createdAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6acc16c3297ffa5fb03baa88"
+    },
+    "quiz": {
+      "$oid": "6acc16c3297ffa5fb03baa82"
+    },
+    "subject": "deutsch",
+    "type": "multipleChoice",
+    "imageUrl": "",
+    "instruction": "Waehle die richtige Antwort.",
+    "question": "Wo hatte der Junge sein Buch gefunden?",
+    "options": [
+      {
+        "option": "Bibliothek",
+        "correct": true
+      },
+      {
+        "option": "Keller",
+        "correct": false
+      },
+      {
+        "option": "Garten",
+        "correct": false
+      }
+    ],
+    "sentences": [],
+    "guessedSentences": [],
+    "createdAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6acc16c3297ffa5fb03baa89"
+    },
+    "quiz": {
+      "$oid": "6acc16c3297ffa5fb03baa82"
+    },
+    "subject": "deutsch",
+    "type": "multipleChoice",
+    "imageUrl": "",
+    "instruction": "Waehle die richtige Antwort.",
+    "question": "Was wuchs mit jeder Geschichte?",
+    "options": [
+      {
+        "option": "seine Angst",
+        "correct": false
+      },
+      {
+        "option": "seine Welt",
+        "correct": true
+      },
+      {
+        "option": "sein Hunger",
+        "correct": false
+      }
+    ],
+    "sentences": [],
+    "guessedSentences": [],
+    "createdAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6acc16c4297ffa5fb03baa8a"
+    },
+    "quiz": {
+      "$oid": "6acc16c3297ffa5fb03baa83"
+    },
+    "subject": "deutsch",
+    "type": "multipleChoice",
+    "imageUrl": "",
+    "instruction": "Waehle die richtige Antwort.",
+    "question": "Der Junge ___ jeden Abend am Fenster.",
+    "options": [
+      {
+        "option": "stand",
+        "correct": true
+      },
+      {
+        "option": "steht",
+        "correct": false
+      },
+      {
+        "option": "stehen",
+        "correct": false
+      }
+    ],
+    "sentences": [],
+    "guessedSentences": [],
+    "createdAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6acc16c4297ffa5fb03baa8b"
+    },
+    "quiz": {
+      "$oid": "6acc16c3297ffa5fb03baa83"
+    },
+    "subject": "deutsch",
+    "type": "multipleChoice",
+    "imageUrl": "",
+    "instruction": "Waehle die richtige Antwort.",
+    "question": "Er ___ ein altes Buch.",
+    "options": [
+      {
+        "option": "findet",
+        "correct": false
+      },
+      {
+        "option": "fand",
+        "correct": true
+      },
+      {
+        "option": "finden",
+        "correct": false
+      }
+    ],
+    "sentences": [],
+    "guessedSentences": [],
+    "createdAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6acc16c4297ffa5fb03baa8c"
+    },
+    "quiz": {
+      "$oid": "6acc16c3297ffa5fb03baa83"
+    },
+    "subject": "deutsch",
+    "type": "multipleChoice",
+    "imageUrl": "",
+    "instruction": "Waehle die richtige Antwort.",
+    "question": "Seine Welt ___ groesser.",
+    "options": [
+      {
+        "option": "wurde",
+        "correct": true
+      },
+      {
+        "option": "werden",
+        "correct": false
+      },
+      {
+        "option": "wird",
+        "correct": false
+      }
+    ],
+    "sentences": [],
+    "guessedSentences": [],
+    "createdAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6acc16c4297ffa5fb03baa8d"
+    },
+    "quiz": {
+      "$oid": "6acc16c3297ffa5fb03baa83"
+    },
+    "subject": "deutsch",
+    "type": "multipleChoice",
+    "imageUrl": "",
+    "instruction": "Waehle die richtige Antwort.",
+    "question": "Er ___ die Sterne.",
+    "options": [
+      {
+        "option": "zaehlt",
+        "correct": false
+      },
+      {
+        "option": "zaehlte",
+        "correct": true
+      },
+      {
+        "option": "zaehlen",
+        "correct": false
+      }
+    ],
+    "sentences": [],
+    "guessedSentences": [],
+    "createdAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    }
+  },
+  {
+    "_id": {
+      "$oid": "6acc16c4297ffa5fb03baa8e"
+    },
+    "quiz": {
+      "$oid": "6acc16c3297ffa5fb03baa83"
+    },
+    "subject": "deutsch",
+    "type": "multipleChoice",
+    "imageUrl": "",
+    "instruction": "Waehle die richtige Antwort.",
+    "question": "Am Abend ___ er am Fenster.",
+    "options": [
+      {
+        "option": "steht",
+        "correct": false
+      },
+      {
+        "option": "stand",
+        "correct": true
+      },
+      {
+        "option": "stehen",
+        "correct": false
+      }
+    ],
+    "sentences": [],
+    "guessedSentences": [],
+    "createdAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    },
+    "updatedAt": {
+      "$date": "2026-10-11T23:07:47.784Z"
+    }
+  }
+]

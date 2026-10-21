@@ -172,6 +172,28 @@ export interface IUploadedImage {
   createdAt: Date;
 }
 
+// Ein Whiteboard. Die Objekte (Klebezettel, Texte, Zeichnungen) liegen als
+// ein Feld im Dokument, weil sie sich staendig aendern und nicht einzeln
+// abgefragt werden. Die boardId steht in der Adresse (whiteboard/<boardId>).
+export interface IWhiteboard {
+  _id: string;
+  boardId: string;
+  title: string;
+  objects: unknown[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Ein Whiteboard. boardId ist die Kennung aus der Adresse (whiteboard/<boardId>)
+// und deshalb eindeutig.
+const WhiteboardSchema: Schema = new Schema({
+  boardId: { type: String, required: true, index: true, unique: true },
+  title: { type: String, required: true },
+  objects: { type: Schema.Types.Mixed, required: false, default: [] },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
 const DictPrefSchema: Schema = new Schema({
   dict: { type: Schema.Types.ObjectId, ref: "Dict" },
   dictUrl: { type: String, required: true },
@@ -348,6 +370,10 @@ const UploadedImage: Model<IUploadedImage> = connection.model<IUploadedImage>(
   "UploadedImage",
   UploadedImageSchema
 );
+const Whiteboard: Model<IWhiteboard> = connection.model<IWhiteboard>(
+  "Whiteboard",
+  WhiteboardSchema
+);
 
 
-export { Exercise, User, Topic, Dict, DictPref, Quiz, Book, BookStore, School, UploadedImage };
+export { Exercise, User, Topic, Dict, DictPref, Quiz, Book, BookStore, School, UploadedImage, Whiteboard };

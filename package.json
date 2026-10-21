@@ -30,6 +30,7 @@
     "build": "tsc ",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:threeinarow": "ts-node src/threeInARow/gameLogic.test.ts",
+    "test:whiteboard": "ts-node src/whiteboard/boardLogic.test.ts",
     "test:threeinarow:smoke": "ts-node scripts/threeinarow-smoke.ts",
     "test:imagelimit": "ts-node src/helpers/imageLimit.test.ts",
     "test:ownership": "ts-node src/helpers/ownership.test.ts",

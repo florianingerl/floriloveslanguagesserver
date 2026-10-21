@@ -1,0 +1,6 @@
+1) The user interface jumps around when the content of the quiz changes
+Can you please fix this by setting the height of the quiz 600 px. When the quiz is in FullScreen-mode
+then of course the height should be the whole height of the screen/viewport.
+Of course, you could then get rid of the fixed height set to the wrapper of the image.
+The component which should get the extra space vertically if there is some, should be the SplitPane with the image
+(so set flex-grow: 1; on the SplitPane )

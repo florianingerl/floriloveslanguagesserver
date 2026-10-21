@@ -1,0 +1,222 @@
+General instructions:
+Always implement the feature, test it and then commmit and push it ! For database tasks,
+you can connect to the database via the monosh and use the connection string I have already given you.
+
+
+1)
+The VueSchoolFilter component doesn't work right now. I went to the French quiz
+and the dropdown with the schools was empty. But it should have contained "10.Klasse Gymnasium Bayern"
+and "9.Klasse Gymnasium Bayern".
+In general, this dropdown should contain all the schools for which exits at least one exercise
+for that school and that subject (subject of the quiz) in the database.
+Can you fix that bug please ?
+
+2)Please remove the feature that the image goes into FullScreen, when clicked
+Then commit and push !
+
+3) Please create an own ExerciseNavigation.vue Vue-component, that should replace the current
+exercise navigation ui in VueQuiz ! So basically extract the current exercise navigation ui in its 
+own VueComponent. The new component should then emit signal that VueQuiz can react to so the functionality
+stays the same
+Implement, test, commit and push !
+
+4) All the writings in the user interface (e.g. the writings on the "Validate", "Retry" and "Solution buttons" )
+should be in the language of the quiz (e.g. for the French quiz , everything should be in French ). 
+For all the other quizzes (not the language learning quizzes) , the language should be the language that
+the user selected on the very top of my website
+Implement, test and then commit and push it !
+
+5) Please put the three buttons in one ExerciseFeedback component ! This component should be a div
+with display: flex; flex-direction: horizontal; gap: 2px; justify-content: flex-start
+All the buttons (the flex items ) should have flex-shrink: 1, overflow: hidden; overflow-policy : ellipsis
+The writing on the buttons should not wrap ! So white-space: no-wrap;
+Please put nice bootstrap icons for "Validate", "Show solution" and "Retry" on these buttons. This component should of
+course emit signal, that VueMCGaps, VueWordOrder, VueQuestion, etc... react to !
+Implement, test and then commit and push it !
+
+6) The Split Pane should not contain the ExerciseNavigation component
+Please put the ExerciseNavigation component under the Split Pane !
+Implement, test and then commit and push it !
+Everything done by Big Pickle, pushed to master !
+
+7) The NewTopicCreator component should have a property parentTopic : Topic? 
+When the button "Add" is clicked the new topic should be inserted into the database as a child topic
+to this parentTopic. After that the component should emit a signal, that the TopicChooser should react to.
+The newly created topic should there become the selected topic. Currently this doesn't work.
+For example: French Quiz -> Login -> New exercise -> Select no topic -> Add topic "Grammaire" (which is then selected, so far so good) 
+-> Add topic "Pronoms" Error: THis topic then doesn't become a child topic of the parent topic "Grammaire".
+Can you please fix this bug ? Then test it and then commit and push it !
+
+8) Please create a ImageChooserAndDisplayer component ! It should be a div with
+display: flex; flex-direction: column; gap: 2px; align-items: fill (meaning all the items should take all the horizontal space) 
+First there is the image (with object-fit: cover; object-position: center; ) inside a wrapper
+(with overflow: auto; flex-grow: 1; ) 
+Then there should come the ImageFromKlippyChooser component which is div with
+display: flex; flex-direction: row; justify-content: flex-start;
+Inside ImageFrommKlippyChooser, there is an input of type text and next to it a button with a nice bootstrap icon on it and the text "Search image on Klippy".
+the input text should have flex-grow: 1; flex-shrink: 1; The button ( a secondary button ) should have a fixed with of 30px; overflow: hidden; text-overflow: ellipsis and
+as a tooltip the same text as what is writtn on It
+Below the Image from KlippyChooser, there should be the button  (a secondary button) "Get random image from Facile".  
+overflow:hidden; text-overflow: ellipsis; text-align: center; align-self: stretch (meaning it should take all the available horizontal space)
+Below the "Get random image from Facile" button, there should be a 
+PasteImageOrUrl component, which should be a div with 
+display: flex; flex-direction: row; 
+The first thing in PasteImageOrUrl is a label "URL:" and then an input of type text, where an image url of an image can be pasted in. 
+The input of type text should react to the @input event, so when an image URL is pasted into the component, it emits a signal immediately
+or when an image is pasted in, that image is uploaded to the VPS server (to the folder assets/img/parentTopic1/parentTopic2/topic/ ) immediately
+and is assigned there an url and its URL is then returned which is a parameter of the signal emitted.
+The ImageChooserAndDisplayer component should react to that signal by displaying that image.
+Can you implement this, test this and then commit and push it !
+
+9) Can you create a SchoolChooserAndCreator component ?
+This component should be a div with
+display: flex; flex-direction: row; wrap: nowrap; gap: 2px; overflow: auto;
+The first component should be a SchoolChooser which is a div
+with display:flex; flex-direction: row; wrap: nowrap; gap: 2px; overflow: auto;
+The SchoolChooser consists of a label "School:" and a dropdown menu
+where you can select a school.
+When the selected school changes, a signal should be emitted !
+Next to the schoolChooser, there is the
+SchoolCreator which is a div
+with display: flex; flex-direction: row; wrap: nowrap; flex-shrink: 1; overflow: auto;
+It consists of the label "New school", a text input and then the "Add"-button. When a new school is added,
+it should be added to the database and a signal should be emitted that the
+SchoolChooser reacts to. It updates its dropdown menu by fetching again all the schools from
+the database and selects the new school.
+
+Go ahead ! Implement it, test it and then commit and push it !
+
+9) You find here a document with French Vocabulary "C:\Users\imelf\Documents\Französisch\Vokabelliste_622268_Dec_BY_2017_1_ukr.pdf".
+Can you insert exercises into my database.
+The quiz should be the French one.
+The school whould be "5.Klasse Gymnasium Bayern".
+The topic should be "Découvertes 1 Vocabulaire chapitre 2". (Lektion 2) The vocabulary "for Lektion 2" are on the pages 3-5
+For every French vocabulary in the document, create a gapText exercise where the solution is the French word and behind the 
+gap is the German word in round brackets 
+Example. gapText = "J'ai besoin d'un {crayon} (Bleistift)."
+Each exercise must be accompanied by a picture. Please find  picture by searching for either the German or the French word on Klippy.
+Find a picture on Klippy that has a descrition, so you know what is on the picture.
+Then make a sentence that really has something to do with the picture.
+
+10) 
+I want to have the following feature.
+Example:
+I go to the French quiz on my website. I select the topic "Découvertes 1 vocabulaire chapitre 2" and I select the school
+"5.Klasse Gymnasium Bayern".
+Then in the browser URL should appear something like "https://florianingerl.github.io/#französisch?topic=<titleoftopic>&school=<nameofschool>
+That link, I want to sent it to my student, who then is directed to the quiz with the right topic and school alread selected.
+This should work for every quiz, for every topic and every school.
+Can you implement this feature, test it and then commit and push it ?
+
+11) Bug, the navigation pane should be moved out of the SplitPane !
+The navigation pane should be under the Splitter.
+
+12) The anchors on the website don't quite work. I just tried to select the Schule->Französisch
+in the menu bar on the very top of my website.  I just entered this link https://florianingerl.github.io/#franzoesisch?topic=Vocabulaire%20chapitre%202
+and was redirected to the "Chemie"-section
+    
+13) Save button should be the default button! No !!!!!!!!!!!!! Then Enter on every text input whould press the save button. It should be clicked by pressing enter.
+In VueNewExercise or in VueNewTopic, there is the save and the cancel button. First, can you put nice bootstrap icons on these buttons next to the writing. And can you make the Save button the default button (the one that is clicked if the user presses Enter) ? I think, you may do this <form style="display:flex; flex-direction: row; gap: 2 px;"><button class = "btn-primary btn" type="submit">Save</button> <button class="btn btn-secondary">Cancel</button> </form> . But I don't know whether this would really work. Please tell me what you have in mind ?
+
+14) Can you set the parentTopic "Vocabulaire" (you have to create that topic in the database first) on the topic "Vocabulaire chapitre 2". 
+Change the title "Vocabulaire chapitre 2" to "Découvertes 1 vocabulaire chapitre 2".
+
+15) Exactly in the way you did instruction 9, can you create vocabulary exercises for 
+school="10.Klasse Gymnasium Bayern"
+topic="Découvertes 5 chapitre 1" (a child topic of "Vocabulaire" and also topic="Découvertes 5 chapitre 2" and topic="Découvertes 5 chapitre 3"
+The pdf is here https://www.klett.de/inhalt/media_fast_path/145/Vokabelliste_624051_Dec_2020_5_ukr.pdf
+
+16)Only the owner of an exercise or the user with email "imelflorianingerl@gmail.com" should be able to edit or delete exercises
+
+17)Pasting an image from the clipboard into the text input after the label "URL" doesn't work any more. 
+
+18)In VueNewTopic, it should be possible to change the parent topic of this topic:
+So on the right hand side of the text input for the title of the topic, there should be a label "Parent topic:" and a MTopicChooser that chooses the
+parent topic for this topic. If inside MTopicChooser, there is also a label, then give MTopicChooser a property label whose default value is the
+current writing on the label in MTopicChooser and is "Parent topic:" when the MTopicChooser is now used inside VueNewTopic.
+The whole topic ui in VueNewTopic should be on a single line, except if the VueNewTopic component is too small, then the parent topic
+ui should be on the next line.
+
+19) Rename every Vue component so that it follows the molecule/organism/atom naming convection, so e.g.
+VueNewExercise should become ONewExercise and VueExercise should become OExercise
+
+20) Can you create 
+
+21) In OExercise , when the tab "Exercises" is select, not only the topic but also (in the same way as the topic)
+the school of the exercise should be display (if it is not falsy) 
+So create an MSchoolDisplayer and put the MTopicDisplayer and the MSchoolDisplayer inside a component
+"MTopicAndSchoolDisplayer" and use it if !formOffen . MTopicAndSchoolDisplayer should be a div with display:flex; flex-direction: row; gap: 2px;
+wrap: nowrap; Both MTopicDisplayer and MSchoolDisplayer can shink (flex-shrink: 1) and inside these two components, set
+"flex-shrink:1; overlfow:hidden; text-overflow: ellipsis; white-space: nowrap" only on the label badge. 
+
+22) In ONewTopic, the save and cancel button should be layed out like in ONewExercise. Cancel should be a secondary button. Save should be the default button
+(that is triggered when Enter is clicked )
+
+23) The three buttons for "Validate", "Show solution" and "Retry" should be in one Vue component MExerciseFeedback.
+This Vue component can emit three signals.
+This should be a div with display:flex; flex-direction: row; gap 2px; justify-content: flex-start; wrap: nowrap;
+and all the tree buttons (which are the flex items) should get a nice bootstrap icon (icon matches the purpose of the button) and have
+flex-shrink: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+
+24) The cancel button should be a secondary button
+
+25) I want to be able to navigate with the arrow keys between the exercises. What key/key combination would be suitable to move ahead/backwards 5 exercises
+
+26) The nickname of the owner of an exercise should be visible. Maybe another label "Owner" and next to it the nickname of the owner as a label badge.
+It should be inside an MOwnerDisplayer component who was display:flex; flex-direction: row; gap: 2px; justify-content: flex-start; 
+Label badge with the owner should have the css styles flew-shrink: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+The label should have a tooltip that shows the full nickname of the owner of the exercise.
+The label should also be clickable ()
+
+27) Right now, an exercise has the fields instruction: string? and question: string? Can you merge these two fields into one, i.e. questionOrInstruction: string
+Perform the necessary migration in the database for all the exercises ! And in ONewExercise, have a label "Instruction/Question:" 
+
+28) It should be possible to have Latex formulas in the question/instruction of the exercise and in the options (of a multiple choice exercise ).
+They should be displayed correctly in the UI.
+First question: How can you write Latex-formulas in html ? Or how do you write a formula in Html ?
+Second question: In the instruction/question/gaptext/option text field, the experienced user should be allowed to enter html, so he could enter 
+enter e.g. I <strong>am</strong> {pretty|ugly}. for a gaptext exercise. This gaptext would then have to be saved in the database
+as this html-string and would have to be displayed in the UI with <div vhtml="exercise.gapText"></div>
+What would need to change, to implement this ?
+
+29) It should be possible to send a link to my website with the correct language for one of my clients already chosen, i.e.
+Website: https://florianingerl.github.io/?lang=en should lead to my website translated into English or
+Website: https://florianingerl.github.io/?lang=fr should lead to my website translated into French
+I don't know whether the URL in the browser URL bar should update if the user changes the language . It would be write-back, right ? If such a write-back is the common solution,
+I would like to have that. Otherwise tell me the common solution !
+
+30) What is exactly the local storage and what is it commonly used for ?
+
+31) When an exercise has been successfully created or successfully updated in the database, a toaster on the bottom right corner of the page
+should tell the user this !
+
+32) Database migration. All exercises that contain formulas in the question/instruction or in the options of a multiple choice
+exercise, should use Latex now, i.e. Example:
+question = "Was ist k * k ?" -> question = "Was ist $k \cdot k$ ?"
+
+33) Database migration. The options can be just an array of strings, i.e. type Exercise { options: string[] ?}, i.e. if you save ["Ja","Nein"]
+into the database for options, then it means that "Ja" is the correct option. Before being display in OQuestion.vue, the options should 
+be shuffled. 
+
+34)Bug: Show solution for a multiple choice exercise doesn't work right now
+Do you understand instruction 34 of InstructionForTheAI.txt ? Can you reproduce that bug ? I just went to the conciousness quiz on my website and pressed "Show solution" and only all checkboxes became disabled. But it should be that the one correct option should become checked and all the wrong options should become unchecked, exercise.correctlyAnswered = false; When show solution was pressed, a boolean variable must be set, so that the checkboxes aren't neither red nor green, but stay  black. 
+
+35) I want to use the GMail API to send and receive email. 
+What I want to have is an email verification mechanism, when a new user signs up using the SignUp dialog of my frontend.
+With my Gmail account and the GMail API, I want to send to that freshly signed up user an email with a one-time verification link.
+The user will receive a one-time code and has to enter that code on the site of the one-time verification link.
+In the Google Cloude Console, I have already created a project and have enabled the GMail API for this project. 
+Can you implement the functionality in my backend server, that I just described ? What credentials do you need
+from me ? Is it possible to make this work without me giving you my credentials ? And without me having to publish credentials on GitHub ? So maybe only
+use environment variables on my VPS backend server ?
+
+36) What is a RESTful API ?
+
+37) I don't want to have any passwords or API keys or any private information that some malicious could exploit in some way published on GitHub.
+Can you tell me all the private information that is currrently published on GitHub and tell me what I can do to put these
+information in a different place. Maybe we can work with environment variables on my VPS backend server ? Or what are your suggestions ?
+
+1000)4-Stunden-Lernpaket-Mit-Bonus:   
+4*(30+5) Euro für 4*60min falls du dein Ziel (z.B. Bestehen der Klausur) erreichst und 4*(30-5) Euro, falls du dein Ziel verfehlst
+
+1001)Ich will Kurse anbieten, die mit Prüfung und Zertifikat enden ! Angebote dazu auf Website schreiben 

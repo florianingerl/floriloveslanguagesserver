@@ -9,6 +9,7 @@ import testDB from "./src/helpers/testDB";
 import initDB from "./src/helpers/initDB";
 import { attachThreeInARow } from "./src/threeInARow/socket";
 import { attachBookCollaboration } from "./src/bookCollaboration/socket";
+import { attachWhiteboard } from "./src/whiteboard/socket";
 import { Request, Response} from "express";
 
 console.log("Testing whether we can connect to the MONGO DB database");
@@ -63,12 +64,14 @@ const PORT = Number(process.env.PORT) || 8080;
 // sich in die beiden Aufgaben mit jeweils einem eigenen Ordner:
 //   src/threeInARow/        Spiel "Three-in-a-row"
 //   src/bookCollaboration/  Gemeinsames Schreiben von Buechern
+//   src/whiteboard/         Interaktives Whiteboard
 const httpServer = createServer(app);
 const io = new SocketServer(httpServer, {
   cors: { origin: dbConfig.CORS, methods: ["GET", "POST"] },
 });
 attachThreeInARow(io);
 attachBookCollaboration(io);
+attachWhiteboard(io);
 
 httpServer.listen(PORT, async () => {
   // await testDB();
