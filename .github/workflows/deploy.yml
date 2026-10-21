@@ -36,6 +36,11 @@ jobs:
           cd /var/www/floriloveslanguagesserver
           git fetch --prune origin main
           git checkout --force -B main origin/main
+          if [ -f /etc/floriloveslanguagesserver.env ]; then
+            install -m 600 /etc/floriloveslanguagesserver.env .env.production
+          else
+            echo "Warnung: /etc/floriloveslanguagesserver.env fehlt - .env.production wird nicht wiederhergestellt."
+          fi
           npm install
           npm run build
           sudo -n /usr/bin/systemctl restart floriloveslanguagesserver
