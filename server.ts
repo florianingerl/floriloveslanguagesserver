@@ -11,7 +11,7 @@ import { attachThreeInARow } from "./src/threeInARow/socket";
 import { attachBookCollaboration } from "./src/bookCollaboration/socket";
 import { Request, Response} from "express";
 
-console.log(process.env.MONGODB_URL);
+console.log("Testing whether we can connect to the MONGO DB database");
 
 
 interface CorsOptions {
@@ -36,7 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 // Use the routes
 app.use("/", routes);
 
-console.log("Testing whether we can connect to the MONGO DB database at " + dbConfig.URL);
+console.log("Testing whether we can connect to the MONGO DB database");
 const client = new MongoClient(dbConfig.URL);
 //const client = new MongoClient("mongodb+srv://flori:ABC@cluster0.p9bpe.mongodb.net/");
 async function run(): Promise<void> {
