@@ -87,7 +87,7 @@ router.get("/amen", async (
   res: Response
 ): Promise<void> => {
    console.log("The amen endpoint was called!");
-   res.status(201).json( { message: "This is the amen endpoint - auto-test!"});
+   res.status(201).json( { message: "This is the amen endpoint - updated!"});
 });
 
 router.get("/dummy", async (
