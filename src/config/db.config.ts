@@ -1,15 +1,18 @@
-import dotenv from "dotenv";
+/*import dotenv from "dotenv";
 
 const envFile =
   process.env.NODE_ENV === "production" ? ".env.production" : ".env";
 dotenv.config({ path: envFile });
+
 
 const url = (process.env.MONGODB_URL ?? "").trim();
 if (process.env.NODE_ENV === "production" && !url) {
   throw new Error(
     `MONGODB_URL fehlt: ${envFile} konnte keine Verbindungszeichenfolge laden.`,
   );
-}
+} */
+
+const url = "mongodb+srv://flori2:ABC@cluster0.p9bpe.mongodb.net/";
 
 export const dbConfig = {
   HOST: "localhost",
@@ -19,7 +22,7 @@ export const dbConfig = {
   DB: "nekaGit",
   //URL: "mongodb+srv://flori:ABC@cluster0.p9bpe.mongodb.net/",
   //URL: process.env.MONGODB_URL ?? "mongodb://127.0.0.1:27017/test",
-  URL: url || "mongodb+srv://flori:ABC@cluster0.p9bpe.mongodb.net/",
+  URL: url || "mongodb+srv://flori2:ABC@cluster0.p9bpe.mongodb.net/",
   //URL: "mongodb+srv://njoco:OZCYn16yxbOtjQ2x@cluster0.dkvowsi.mongodb.net/", // Include the DB name in the URL
   JWT_SECRET: "applepen", // Add a JWT secret for token signing
   CORS: "*", // Allow all origins
