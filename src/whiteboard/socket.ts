@@ -24,6 +24,9 @@ import {
   freieFarbe,
   normiereName,
   normierePatch,
+  normiereStiftPunkte,
+  normiereStiftStart,
+  MAX_PUNKTE_PRO_OBJEKT,
   sortiereObjekte,
   wendePatchAn,
 } from "./boardLogic";
@@ -59,7 +62,20 @@ type Ack = (res: {
   error?: string;
 }) => void;
 
+interface StiftVorschau {
+  boardId: string;
+  id: string;
+  clientId: string;
+  socketId: string;
+  punkte: number;
+}
+
 const boards = new Map<string, Board>();
+// Laufende Stiftstriche. Sie werden nur an die anderen Teilnehmer
+// weitergegeben und nie gespeichert; der fertige Strich kommt danach als
+// normales Objekt ueber "whiteboard:update".
+const stiftVorschauen = new Map<string, StiftVorschau>();
+const MAX_STIFT_VORSCHAUEN_PRO_SOCKET = 8;
 
 let io: Server | null = null;
 
@@ -165,6 +181,7 @@ function entferneTeilnehmer(board: Board, clientId: string): void {
 }
 
 function entferneSocket(socket: Socket): void {
+  entferneStiftVorschauen(socket);
   const clientIds = socket.data.whiteboardClients as string[] | undefined;
   if (!clientIds || clientIds.length === 0) return;
   socket.data.whiteboardClients = [];
@@ -185,6 +202,23 @@ function merke(socket: Socket, boardId: string, clientId: string): void {
   const schluessel = `${boardId}|${clientId}`;
   if (!eintraege.includes(schluessel)) eintraege.push(schluessel);
   socket.data.whiteboardClients = eintraege;
+}
+
+function stiftSchluessel(boardId: string, id: string): string {
+  return `${boardId}|${id}`;
+}
+
+/** Entfernt laufende Vorschauen eines Sockets und meldet sie den anderen. */
+function entferneStiftVorschauen(socket: Socket, boardId?: string): void {
+  for (const [schluessel, vorschau] of stiftVorschauen) {
+    if (vorschau.socketId !== socket.id) continue;
+    if (boardId && vorschau.boardId !== boardId) continue;
+    stiftVorschauen.delete(schluessel);
+    io?.to(vorschau.boardId).emit("whiteboard:pen", {
+      phase: "cancel",
+      id: vorschau.id,
+    });
+  }
 }
 
 export function attachWhiteboard(socketServer: Server): void {
@@ -281,6 +315,12 @@ export function attachWhiteboard(socketServer: Server): void {
           board.objekte = new Map(
             wendePatchAn(Array.from(board.objekte.values()), patch).map((o) => [o.id, o])
           );
+          for (const objekt of patch.upserts) {
+            stiftVorschauen.delete(stiftSchluessel(boardId, objekt.id));
+          }
+          for (const id of patch.deletes) {
+            stiftVorschauen.delete(stiftSchluessel(boardId, id));
+          }
           board.updatedAt = Date.now();
           io?.to(board.id).emit("whiteboard:changed", patch);
           speichereVerzoegert(board);
@@ -288,6 +328,92 @@ export function attachWhiteboard(socketServer: Server): void {
         } catch (err) {
           console.error(err);
           ack?.({ error: "The change could not be saved." });
+        }
+      }
+    );
+
+    socket.on(
+      "whiteboard:pen",
+      (payload: {
+        boardId?: string;
+        clientId?: string;
+        phase?: string;
+        stroke?: unknown;
+        id?: string;
+        points?: unknown;
+      }) => {
+        try {
+          const boardId = String(payload?.boardId ?? "").trim().slice(0, 64);
+          const clientId = String(payload?.clientId ?? "").trim().slice(0, 64);
+          const board = boards.get(boardId);
+          if (!board) return;
+          const teilnehmer = board.teilnehmer.get(clientId);
+          if (!teilnehmer || teilnehmer.socketId !== socket.id) return;
+
+          if (payload?.phase === "start") {
+            const stroke = normiereStiftStart(payload.stroke);
+            if (!stroke) return;
+            const schluessel = stiftSchluessel(boardId, stroke.id);
+            if (stiftVorschauen.has(schluessel)) return;
+            let offene = 0;
+            for (const vorschau of stiftVorschauen.values()) {
+              if (vorschau.socketId === socket.id) offene++;
+            }
+            if (offene >= MAX_STIFT_VORSCHAUEN_PRO_SOCKET) return;
+            stiftVorschauen.set(schluessel, {
+              boardId,
+              id: stroke.id,
+              clientId,
+              socketId: socket.id,
+              punkte: 0,
+            });
+            socket.to(board.id).emit("whiteboard:pen", {
+              phase: "start",
+              stroke: {
+                id: stroke.id,
+                x: stroke.x,
+                y: stroke.y,
+                z: stroke.z,
+                color: stroke.color,
+                strokeWidth: stroke.strokeWidth,
+                author: stroke.author,
+              },
+            });
+            return;
+          }
+
+          const id = String(payload?.id ?? "").trim().slice(0, 64);
+          if (!id) return;
+          const schluessel = stiftSchluessel(boardId, id);
+          const vorschau = stiftVorschauen.get(schluessel);
+          if (
+            !vorschau ||
+            vorschau.clientId !== clientId ||
+            vorschau.socketId !== socket.id
+          ) {
+            return;
+          }
+
+          if (payload?.phase === "points") {
+            const punkte = normiereStiftPunkte(payload.points);
+            const verbleibend = MAX_PUNKTE_PRO_OBJEKT - vorschau.punkte;
+            const gekuerzt = punkte.slice(0, Math.max(0, verbleibend));
+            if (!gekuerzt.length) return;
+            vorschau.punkte += gekuerzt.length;
+            socket.to(board.id).emit("whiteboard:pen", {
+              phase: "points",
+              id,
+              points: gekuerzt,
+            });
+            return;
+          }
+
+          if (payload?.phase === "cancel") {
+            stiftVorschauen.delete(schluessel);
+            socket.to(board.id).emit("whiteboard:pen", { phase: "cancel", id });
+          }
+        } catch (err) {
+          console.error("Stiftvorschau konnte nicht verteilt werden:", err);
         }
       }
     );
@@ -313,6 +439,7 @@ export function attachWhiteboard(socketServer: Server): void {
       const clientId = String(payload?.clientId ?? "").trim().slice(0, 64);
       const board = boards.get(boardId);
       if (!board) return;
+      entferneStiftVorschauen(socket, boardId);
       const eintraege = (socket.data.whiteboardClients as string[] | undefined) ?? [];
       socket.data.whiteboardClients = eintraege.filter((e) => e !== `${boardId}|${clientId}`);
       entferneTeilnehmer(board, clientId);
@@ -330,6 +457,9 @@ export function attachWhiteboard(socketServer: Server): void {
     for (const [id, board] of boards) {
       if (board.teilnehmer.size === 0 && jetzt - board.updatedAt > 24 * 60 * 60 * 1000) {
         if (board.saveTimer) clearTimeout(board.saveTimer);
+        for (const [schluessel, vorschau] of stiftVorschauen) {
+          if (vorschau.boardId === id) stiftVorschauen.delete(schluessel);
+        }
         boards.delete(id);
       }
     }

@@ -36,6 +36,7 @@ const OBJEKT_ARTEN: WhiteboardObjectType[] = [
 // Bild oder Millionen Punkten ueberlasten kann.
 export const MAX_OBJEKTE_PRO_PATCH = 200;
 export const MAX_PUNKTE_PRO_OBJEKT = 4000;
+export const MAX_PUNKTE_PRO_EREIGNIS = 512;
 export const MAX_TEXTLAENGE = 5000;
 export const MAX_BILDGROESSE = 1_500_000;
 
@@ -109,6 +110,51 @@ export function normiereObjekt(eingabe: unknown): WhiteboardObject | null {
     objekt.src = roh.src.slice(0, MAX_BILDGROESSE);
   }
   return objekt;
+}
+
+/** Prueft die Metadaten einer Stiftvorschau aus dem Netzwerk. */
+export function normiereStiftStart(eingabe: unknown): WhiteboardObject | null {
+  if (!eingabe || typeof eingabe !== "object") return null;
+  const roh = eingabe as Record<string, unknown>;
+  const id = String(roh.id ?? "").trim().slice(0, 64);
+  if (!id) return null;
+
+  const objekt: WhiteboardObject = {
+    id,
+    type: "pen",
+    x: istZahl(roh.x) ? roh.x : 0,
+    y: istZahl(roh.y) ? roh.y : 0,
+    w: 0,
+    h: 0,
+    z: istZahl(roh.z) ? roh.z : 0,
+    color: String(roh.color ?? "#323f4b").slice(0, 32),
+    points: [],
+  };
+  if (istZahl(roh.strokeWidth)) {
+    objekt.strokeWidth = Math.min(Math.max(roh.strokeWidth, 1), 64);
+  }
+  if (typeof roh.author === "string") {
+    objekt.author = roh.author.slice(0, 40);
+  }
+  return objekt;
+}
+
+/** Prueft einen Punktestapel einer Stiftvorschau. */
+export function normiereStiftPunkte(
+  eingabe: unknown,
+  max = MAX_PUNKTE_PRO_EREIGNIS
+): number[] {
+  if (!Array.isArray(eingabe)) return [];
+  const grenze = Math.max(0, Math.min(Math.floor(max), MAX_PUNKTE_PRO_OBJEKT));
+  if (grenze < 2) return [];
+  const punkte: number[] = [];
+  for (const wert of eingabe) {
+    if (!istZahl(wert)) continue;
+    punkte.push(wert);
+    if (punkte.length >= grenze) break;
+  }
+  if (punkte.length % 2 !== 0) punkte.pop();
+  return punkte;
 }
 
 /** Prueft einen Patch aus dem Netzwerk. */

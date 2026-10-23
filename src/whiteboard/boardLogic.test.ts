@@ -63,6 +63,39 @@ function objekt(id: string, z = 0): WhiteboardObject {
   assert.strictEqual(mitSkript!.src, undefined);
 }
 
+// --- Stiftvorschau ---------------------------------------------------------
+{
+  const stift = L.normiereStiftStart({
+    id: "stift1",
+    type: "rect",
+    x: 12,
+    y: 34,
+    z: 7,
+    color: "#ff0000",
+    strokeWidth: 99,
+    points: [1, 2, 3, 4],
+    author: "Flori",
+  });
+  assert.ok(stift);
+  assert.strictEqual(stift!.id, "stift1");
+  assert.strictEqual(stift!.type, "pen");
+  assert.strictEqual(stift!.x, 12);
+  assert.strictEqual(stift!.y, 34);
+  assert.strictEqual(stift!.z, 7);
+  assert.strictEqual(stift!.strokeWidth, 64);
+  assert.deepStrictEqual(stift!.points, []);
+  assert.strictEqual(stift!.author, "Flori");
+  assert.strictEqual(L.normiereStiftStart({ x: 1 }), null);
+  assert.strictEqual(L.normiereStiftStart(null), null);
+}
+{
+  assert.deepStrictEqual(L.normiereStiftPunkte([1, 2, "x", 3, 4, 5], 4), [1, 2, 3, 4]);
+  assert.deepStrictEqual(L.normiereStiftPunkte([1, 2, 3], 10), [1, 2]);
+  assert.deepStrictEqual(L.normiereStiftPunkte([1, 2, 3, 4], 0), []);
+  assert.deepStrictEqual(L.normiereStiftPunkte("nope"), []);
+  assert.deepStrictEqual(L.normiereStiftPunkte([1, 2], 1), []);
+}
+
 // --- Patches pruefen -------------------------------------------------------
 {
   const patch = L.normierePatch({

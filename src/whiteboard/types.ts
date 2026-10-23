@@ -59,6 +59,26 @@ export interface WhiteboardPatch {
   deletes: string[];
 }
 
+export interface WhiteboardPenStroke {
+  id: string;
+  x: number;
+  y: number;
+  z: number;
+  color: string;
+  strokeWidth?: number;
+  author?: string;
+}
+
+export type WhiteboardPenPhase = "start" | "points" | "cancel";
+
+/** Kurzlebige Vorschau eines Stifts, die nicht in der Datenbank landet. */
+export interface WhiteboardPenEvent {
+  phase: WhiteboardPenPhase;
+  stroke?: WhiteboardPenStroke;
+  id?: string;
+  points?: number[];
+}
+
 export interface WhiteboardCursor {
   participant: WhiteboardParticipant;
   x: number;
