@@ -25,6 +25,7 @@ jobs:
             cp /etc/floriloveslanguagesserver/.env.production /var/www/floriloveslanguagesserver/.env.production
             chown root:root /var/www/floriloveslanguagesserver/.env.production
             chmod 600 /var/www/floriloveslanguagesserver/.env.production
+            dos2unix /var/www/floriloveslanguagesserver/.env.production 2>&1 || sed -i 's/\r$//' /var/www/floriloveslanguagesserver/.env.production
             echo "Restarting service..."
             systemctl restart floriloveslanguagesserver
             echo "Deployment complete. Service status:"
