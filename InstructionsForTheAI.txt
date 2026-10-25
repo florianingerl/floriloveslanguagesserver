@@ -216,7 +216,81 @@ use environment variables on my VPS backend server ?
 Can you tell me all the private information that is currrently published on GitHub and tell me what I can do to put these
 information in a different place. Maybe we can work with environment variables on my VPS backend server ? Or what are your suggestions ?
 
+38) If the user clicks on validte and it is correct (and a gaptext exercise), the correct
+solution should be read out loud. The same should happen if "Show solution" is clicked.
+
+39) When you click on the button "New exercise", the topic and school of the current exercise in the quiz
+aren't selected in ONewExercise . But they should be ! 
+
+40) I think that saving a tutorial for a topic doesn't work right now ! I tried to save one,
+but it failed. Can you reproduce and explain why this bug is there and how to fix it ?
+
+41) The game "Three-in-a-row" has to be correctly translated into all languages
+
+42) Resizing an image in the whiteboard doesn't work
+
+43) Resizing any object doesn't work
+
+44) Currently: A user draws an object with the pencil and once he lifts the pencil,
+the drawn object is selected.
+This should not be. It's good that if the user lifts the pencil, the new object is created,
+but the new object shouldn't be selected. Instead, the pencil should still be selected so the user
+can draw in another position .
+
+45) Textboxes don't work. I can create new one, but then I can't write anything inside of it.
+Textboxes should work approximately like they do in the Miro-Whiteboard. Maybe you can find out online what features
+textboxes have in the Miro-Whiteboard and ask me whether we need that feature for an easy, almost first implementation.
+Can you tell me then, how the user is supposed to use the textbox ?
+
+
+46) It should be possible to paste an image from the clipboard with Strg+V . Or press the "Insert" button, and the center of the image should
+be inserted at the point of the cursor (or the point on the whitebord where the user last clicked ! )
+
+47) The export to facile should export all the exercises selected. This should also work if there are more than 10 exercises selected.
+
+48) There should be the possibility to save a whiteboard (as a file on the local machine) and to open
+it again 
+
+49) There should be the possibility to export the board as pdf
+
+50) You have to make a hard refresh on the browser, if you want to see the changes
+of the collabortors ! You can't see live what they are writing ! But you should be
+able to see live the changes that the other collaborators do to the board ! At least this should work for
+pencil drawing ! If someone inserts a picture, the picture should also be immediately visible to the other
+collaborators ! 
+
+51) The flags of the countries on the very top of the website can't be found. Why ?
+
+52 ) In the User profile dialog, there should be a section for "Personal data" where the user can change his name or his email 
+address, but there should also be a settings "Settings for the quiz" where the user can for example choose what is read out loud
+when the solution of a gap text exercise is shown or verified.
+"Only gap" or "Whole sentences"
+should be the options.
+If "Whole sentences" is chosen, the whole exercise.gapText should be read out loud.
+If "Only gap" is chosen, only the gap should be read out loud
+
+53) When an exercise has been saved successfully to the database , a toaster should appear which tells this !
+
+54) A tutorial containing the "'" this character isn't uploaded correctly to Facile. I just uploaded the topic
+"Had better ou should". The tutorial contains for example the sentence "It's usually neutral..." and the "It's" isn't uploaded correctly.
+
+55) Selecting an image and then moving it to another place doesn't work smoothly. 
+
+56) When an object is selected and you press the arrow keys, the object should move (not the canvas), when no object
+is selected the canvas should move
+
+57) It should be possible  to select a rectangular area on the whiteboard. Then all the objects which are > 80 % inside this array should get selected.
+Now it should be possible to delete all those objects (with the button but also with Strg+Entf), to copy them (with the button but also with Strg+C) and insert them at another place (with the button or with Strg+V) or to move them around by drag or with the arrow keys.
+
+58) There should be a rubber. The rubber should work as in the MiroWhiteboard . Maybe you can find out online, how the rubber
+of the Miro Whiteboard works !
+
+59) If I select an object, I can move it with the arrow keys ! This works when I only press an arrow key shortly, but it doesn't work
+when I keep the arrow key pressed (but this should be treated in the same way as multiple short presses of the arrow key one after a short, reasonable time gap after the other one) 
+
+
 1000)4-Stunden-Lernpaket-Mit-Bonus:   
 4*(30+5) Euro für 4*60min falls du dein Ziel (z.B. Bestehen der Klausur) erreichst und 4*(30-5) Euro, falls du dein Ziel verfehlst
+Wenn du dein Ziel verfehlst, dann ist das nächste Paket für dich 3 Euro / h teurer, sonst wird es 1 Euro billiger.
 
 1001)Ich will Kurse anbieten, die mit Prüfung und Zertifikat enden ! Angebote dazu auf Website schreiben 

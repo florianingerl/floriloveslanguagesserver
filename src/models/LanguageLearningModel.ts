@@ -138,6 +138,7 @@ export interface IExercise extends IBaseModel {
 }
 
 export interface IUser extends IBaseModel {
+  name: string;
   email: string;
   password: string;
   role: UserRole;
@@ -145,6 +146,9 @@ export interface IUser extends IBaseModel {
   emailVerified?: boolean;
   verificationCodeHash?: string;
   verificationExpiresAt?: Date;
+  quizSettings?: {
+    gapReadMode?: "gap" | "whole";
+  };
 }
 
 export interface IDict extends IBaseModel {
@@ -343,7 +347,14 @@ const UserSchema: Schema = new Schema({
   emailVerified: { type: Boolean, required: false },
   verificationCodeHash: { type: String, required: false },
   verificationExpiresAt: { type: Date, required: false },
- // tags: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tag" }],
+  quizSettings: {
+    type: {
+      gapReadMode: { type: String, enum: ["gap", "whole"], default: "gap" },
+    },
+    required: false,
+    default: { gapReadMode: "gap" },
+  },
+  // tags: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tag" }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
