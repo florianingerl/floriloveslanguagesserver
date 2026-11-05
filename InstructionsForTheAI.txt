@@ -288,6 +288,320 @@ of the Miro Whiteboard works !
 59) If I select an object, I can move it with the arrow keys ! This works when I only press an arrow key shortly, but it doesn't work
 when I keep the arrow key pressed (but this should be treated in the same way as multiple short presses of the arrow key one after a short, reasonable time gap after the other one) 
 
+60) Deleting objects with the key "Entf" should be possible.
+
+61) If the user filters for a topic, all exercises of that topic and all the exercices its subtopics should be shown. 
+
+62) This function seems to be a performence killer
+/** Merkt sich den Stand vor der Aenderung fuer das Rueckgaengig. */
+function merkeStand(): void {
+	const stand = objects.value.map((obj) => ({ ...obj }));
+	// Wenn sich nichts geaendert hat, gibt es auch nichts rueckgaengig zu machen.
+	const vorher = undoStack.value[undoStack.value.length - 1];
+	if (vorher && gleicheListe(vorher, stand)) return;
+	undoStack.value = [...undoStack.value, stand];
+	if (undoStack.value.length > 50) undoStack.value = undoStack.value.slice(-50);
+	redoStack.value = [];
+}
+
+63) This function is used for resizing, but I am not sure whether it works
+function objectGeaendert(box: { x: number; y: number; w: number; h: number }, id: string): void {
+	objects.value = objects.value.map((obj) => {
+		if (obj.id !== id) return obj;
+		const neu: WhiteboardObject = { ...obj, ...box };
+		if (obj.type === "line") {
+			neu.x2 = box.x + box.w;
+			neu.y2 = box.y + box.h;
+		}
+		return neu;
+	});
+	synchronisiere();
+}
+
+64) Is this a syntax error ? What is the void doing here ??
+function auswahlKopieren(): void {
+	const gewaehlt = objects.value.filter((obj) => selectedIds.value.includes(obj.id));
+	if (!gewaehlt.length) return;
+	kopierPuffer.value = gewaehlt;
+	void copyToClipboard(serializeSelection(gewaehlt));
+}
+
+65) Create an own repository on GitHub for just quiz. The quiz should be a Vue component with a version number
+that others can 
+
+66) When the user has entered the correct solution in a "Word order"-exercise or has pressed the show solution button,
+the whole sentence/solution should be read out laud.
+
+67) In the editor of a Multiple-Choice-Exercise, on the right hand side of the list with the already entered options,
+there should be two buttons, one button for up (moves the selected option one step up with wrapping/rotating/cycling) and one button for down (moves
+the selected option one step down with wrapping/rotating/cycling ). For this to make sense, the user can select exactly one option from the list of
+options and move it then up or down (If no option is selected, the two buttons should be disabled )
+The uppermost option is still the correct one
+The up and down buttons should have nice bootstrap icons on them.
+
+68) Statistics: In the database, a user should have a score for every exercise
+
+69) Order of exercises. In the navigation panel, the user should be able to choose the order of the exercises
+Random order, Reverse order, normal order, Least score first, 
+
+70) It should be possible to select any colour for the pen or the fill colour for a sticky note in an advanced colour dialog
+The colour chosen should then immediately become the color of the pen or the fill colour of a sticky note and become the new first
+colour in the visible colour palette. The other colours are all shifted one to the right and the last colour drops out of the 
+visible colour palette
+
+71) Web design: Quiz about user interface elements (e.g. modals, collapsible overlay button, splitter, group box, etc...) and their names available in
+- html
+- bootstrap
+- VuePrimeUtils
+
+72) In the profile dialog , the section for "Personal data" and for "Settings for the quiz" should become fieldsets with legends
+- 
+73) Modals don't work when in Fullscreen mode
+
+74) When an exercise is successfully saved to the database, the message of the toaster should be in the language of the quiz
+or in the language that the user has chosen on the very top of the website
+
+75) The displaying of a multiple choice exercise doesn't work any more
+
+76) async function dateiOeffnen(datei: File): Promise<void> {
+	dateiFehler.value = "";
+	try {
+		const daten = parseWhiteboardFile(await readTextFile(datei));
+		if (!daten) {
+			dateiFehler.value = t("whiteboard.fileInvalid");
+			return;
+		}
+		if (
+			objects.value.length > 0 &&
+			!window.confirm(t("whiteboard.openConfirm"))
+		) {
+			return;
+		}
+		merkeStand();
+		objects.value = daten.objects.map((obj) => ({ ...obj }));
+		selectedIds.value = [];
+		synchronisiere();
+		await nextTick();
+		canvas.value?.fitToContent();
+	} catch {
+		dateiFehler.value = t("whiteboard.fileReadFailed");
+	}
+}
+
+Warum müssen die Objekte kopiert werden ??
+
+77) Wann wird onMounted() and onBeforeUnmounted() aufgerufen ?
+onMounted(async () => {
+	window.addEventListener("paste", onPaste);
+	try {
+		await session.joinBoard(props.boardId, name.value);
+		objects.value = session.board.value?.objects ?? [];
+		serverObjects.value = objects.value.map((obj) => ({ ...obj }));
+	} catch {
+		setzeFehler("whiteboard.notFound");
+	}
+});
+
+onBeforeUnmount(() => {
+	window.removeEventListener("paste", onPaste);
+});
+
+78) In line 399, there @resize="..." and my IDE tells me this error, if I hover over the line
+Type '(box: { x: number; y: number; w: number; h: number; }, id: string) => void' is not assignable to type '(id: string, box: { x: number; y: number; w: number; h: number; }) => any'.
+  Types of parameters 'box' and 'id' are incompatible.
+    Type 'string' is not assignable to type '{ x: number; y: number; w: number; h: number; }'.
+I think that the order of the arguments simply needs to be changed !
+
+79)When I hover over @cursor = "cursorBewegt", it gives me this error
+	Type '(x: number, y: number) => void' is not assignable to type '(punkt: Point) => any'.
+  Target signature provides too few arguments. Expected 2 or more, but got 1.
+So one of the signatures needs to change !
+
+80) I don't like this v-if   <Splitter v-if="exercise.imageUrl" class="vue-exercise-splitter"> in ONewExercise
+Instead, if exercise.imageUrl is undefined or doesn't point to an exisiting picture, a default imageUrl should be used ! The default image url should be
+assets/img/cs/fragezeichen.jpg (This image is in website/assets/img/cs/fragezeichen.jpg )
+
+81) Rename all components following the Organism, Atom and Molecule naming convenction !
+
+82) Can we get rid of this // VueQuestion erwartet die Aufgabe als "question", alle anderen als "exercise".
+const exerciseProps = computed(() =>
+  exerciseComponent.value === VueQuestion
+    ? { question: props.exercise, lg: props.lg }
+    : { exercise: props.exercise, lg: props.lg },
+)
+In the database, the exercise already has only one field "questionOrInstruction". So also in our file
+types.ts there should be type Exercise { questionOrInstruction: string, ....other fields } and that
+questionOrInstruction should be displayed as the question in VueQuestion exercise.
+
+83) const frageText = computed<string>(() => {
+  if (props.lg === "en" && props.question.questionEn)
+    return props.question.questionEn;
+  if (props.lg === "fr" && props.question.questionFr)
+    return props.question.questionFr;
+  return props.question.questionOrInstruction ?? "";
+});
+Can you please get rid of the fields questionFr, optionsFr, questionEn, optionsEn .
+Only the fields type Exercise { questionOrInstruction: string, options: Type of it , ... other fields }  should remain.
+This has always just been a source of bugs and work !
+We have to write a script that eliminates those fields in the database and we have to eliminate those fields also in the
+types data structures !
+
+If the language chosen on the very top of my website is 
+
+For the conciousness quiz, the nutrition quiz, there might be translations for the questions !
+(But no translations for the language quizzes )
+
+
+84) const props = defineProps<{ question: Exercise; lg?: Lang }>();
+question should be renamed to exercise here !
+
+85) Everything in the code should be in English !
+
+86) Resizing of an object:
+When hovering over the upper left corner/lower right corner or the upper right corner/lower left corner of an object, the
+resize cursor should be different, because the direction of the resize is different.
+When you hover over the right or left border of the object, no resize cursor is visible at all.
+Also when you hover over the top and bottom border of the object, no resize cursor is visible at all.
+The resizing works now perfectly for images or rectangles, but it doesn't work for "Free-drawing-objects". 
+
+87) Image isn't inserted at the cursor position!
+When I copy an image to my clipboard from somewhere, then I click on some position in the whiteboard canvas, and then press Strg+V,
+the middle of the image isn't inserted at the cursor position (but instead it is inserted into the top left corner of the whiteboard )
+The middle of the image should be inserted at the cursor position.
+
+88) "Ctrl and -" should have the same effect as zoom out, "Ctrl and +" should have the same effect as zoom in 
+
+89) There is a palette visible for the pen color. It should be possible to select any color (e.g. with the ColorPicker of VuePrime ).
+The new color selected in that VuePrime-Color picker should become the new first color of the palette and the current color of the pen
+The last color of the palette drops out and all other colours are shifted by one.
+
+90) On the bottom of the 4-hour-learning-package-with-bonus section, there should
+be a button with the text on "Create contract" on it.
+If clicked, a modal dialog should appear, where the student can enter some data.
+The data is just the same as for the modal dialog of the all-or-nothing package.
+Except the price is just 4*(30+-3) euros. So it needs to be explained in the dialog,
+that the student has to pay 4*33 euro
+s and gets 6 euros per lesson back, if he doesn't reach his goal.
+Just like in the dialog for the all or nothing package, there come now the buttons for "Create Contract" or "Cancel"
+and if "Create Contract" is clicked, the contract should be downloadable as a pdf, docx or rtf file.
+The blueprint of the contract is here: MustervertragFor4HoursLearningPackageWithBonus.rtf
+Remark: 
+- Price is 4*(30+-3) euros and not 4*(30+-5) euros
+- There should only be one section/heading for the all-or-nothing-package and for the 4-hours-learning-package with bonus respectively
+(At the moment, there are two sections/headings for both packages )
+Please translate everything into the 5 languages using the i18 library.
+
+
+91) I have already gapText, matching, wordorder, multipleChoice exercises.
+I want to have an exercise of type programming. If in ONewExercise, the programming type is selected,
+you should then be able to select the programming language (for now only JavaScript and TypeScript ) in a dropdown menu that appears next to 
+the dropdown menu for the exercise type .
+The exercises of type programming should work as in this website: https://codingbat.com/prob/p120546
+So when creating a new exercise, the user can select an image, write an instruction (in html ) and then enter the signature
+of the function (and its implementation, which is basically the solution of the exercise) (so a label "Function to be implemented" and under it a textarea should be there.
+Under it, the user should be able to enter testcases. So there is a button "Add testcase" and then a fieldset "Input parameters" appears with a label and an input of type text
+for every input parameter from the function signature and a fieldset "Expected output" with an input of type text with the expected output.
+
+
+The exercise should be displayed as follows in VueExercise:
+The image and the instruction/question is displayed as for the other exericse types.
+Below the question/instruction come now the test cases. They should be display like on this website https://codingbat.com/prob/p120546
+Below the test cases comes a text area where the user can implement the function (the textarea should be prefilled with the
+correct function signature and the curly braces for the function body (You need them for JavaScript and TypeScript, which should be the only supported
+languages in the beginning )
+
+Then come the three buttons for "Validate", "Show solution" and "Retry".
+
+So the type Exercise should be changed like this:
+
+export interface IExercise extends IBaseModel {
+  quiz: Types.ObjectId;
+  // Sprache oder Fach, z.B. "deutsch". Setzt der Server aus dem Quiz.
+  subject?: string;
+  type: string;
+  imageUrl: string;
+  topic?: Types.ObjectId;
+  // Schule/Hochschule/Klasse der Aufgabe. Die Schule steckt in einem eigenen
+  // Dokument (School); die Aufgabe speichert dessen _id.
+  school?: Types.ObjectId;
+  gapText?: string;
+  questionOrInstruction: string;
+  questionEn?: string;
+  questionFr?: string;
+  options?: IExerciseOption[];
+  optionsEn?: IExerciseOption[];
+  optionsFr?: IExerciseOption[];
+  // matching
+  sentences?: ITwoPartSentences[];
+  guessedSentences?: ITwoPartSentences[];
+  // word order
+  wordorder?: IWordOrderSentence;
+  programminglanguage:string; //only if type is programming, e.g. "TypeScript" or "JavaScript" or "Java"
+  function?:string; //function signature and its implementation, only if type is programming
+  testcases?: ITestCase[];
+}
+
+
+export interface ITestCase {
+	//Please kind AI, figure out what should be here
+}
+
+When the user clicks the "Validate" button, his function is compiled using the "JavaScript" or "TypeScript"-NodeJS compiler, that
+is both installed on my local machine as well as on my VPS remote production server 
+and the testcases are executed. If every test passes, he has solved the exercise correctly.
+Maybe you find a "JavaScript" or "TypeScript" compiler as a WebService somewhere on the web and you can use that (
+	choose the more stable solution
+)
+
+Update/Correction to the above:
+In ONewExercise, the user should be able to enter the function and its implementation in the textarea.
+And he should be able to enter testcases. So there should be a label "Testcases:" and underneath a textarea
+where a boolean expression can be entered.
+For example:
+Function and its implementation:
+fun max(a){
+	let i = 1;
+	let max = a[0];
+	while( i < a.length){
+		if( a[i] > max ){
+			max = a[i];
+		}
+		++i;
+	}
+	return max;
+}
+Testcases:
+max([7,9,4]) == 9 && max([3,2,1]) == 3 
+
+In OExercise, where the user needs to solve the exercise,
+the textarea is prefilled with only the function signature and the curly braces (the body of the function should be empty).
+When he clicks "Validate", his function should be compiled and the boolean expression entered in the "Testcases"-input should 
+be checked whether it's true
+
+
+92) I want to have support for the LEAN 4 programming language too
+Example:
+Function to be implemented:
+def double := fun (x:Nat ) => x+x
+
+Testcases:
+example: double 7 = 9 := rfl  
+
+In VueExercise, the textarea should only be prefilled
+with the signature of the function, so not the stuff behind =>
+
+It should also work like this
+def double (x : Nat ) : Nat := x + x
+So the stuff behing := should not be shown
+
+If the user clicks on Validate 
+his written function and below the test should be put
+in a file called amen.lean and be compiled with lean amen.lean
+If there is no output, the exercise was solved correctly !
+
+
+
+
 
 1000)4-Stunden-Lernpaket-Mit-Bonus:   
 4*(30+5) Euro für 4*60min falls du dein Ziel (z.B. Bestehen der Klausur) erreichst und 4*(30-5) Euro, falls du dein Ziel verfehlst

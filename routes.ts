@@ -16,6 +16,7 @@ import {
   getAllExercises,
   getExerciseById,
   updateExercise,
+  validateProgrammingExercise,
 } from "./src/controllers/TimeIT/ExerciseController";
 
 import {
@@ -126,6 +127,7 @@ router.delete("/api/topic/:id", authMiddleware, deleteTopic );
 router.post("/api/exercise", authMiddleware, createExercise);
 router.get("/api/exercise", getAllExercises );
 router.get("/api/exercise/:id", getExerciseById);
+router.post("/api/exercise/:id/validate", validateProgrammingExercise);
 router.put("/api/exercise/:id", authMiddleware, updateExercise);
 router.delete("/api/exercise/:id", authMiddleware, deleteExercise);
 // Quizze: angelegt werden vor allem die Buch-Quizze, gelesen werden sie fuer

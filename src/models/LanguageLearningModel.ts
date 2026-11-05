@@ -135,6 +135,12 @@ export interface IExercise extends IBaseModel {
   guessedSentences?: ITwoPartSentences[];
   // word order
   wordorder?: IWordOrderSentence;
+  // programming
+  programminglanguage?: string;
+  function?: string;
+  // A boolean expression that calls the function, e.g.
+  // "max([7,9,4]) == 9 && max([3,2,1]) == 3".
+  testcases?: string;
 }
 
 export interface IUser extends IBaseModel {
@@ -311,7 +317,7 @@ const TopicSchema : Schema = new Schema({
 const ExerciseSchema: Schema = new Schema({
   quiz: { type: Types.ObjectId, ref: "Quiz", required: true, index: true },
   subject: { type: String, required: false, index: true },
-  type: { type: String, required: true, enum: ["gapText", "multipleChoice", "matching", "wordOrder"] },
+  type: { type: String, required: true, enum: ["gapText", "multipleChoice", "matching", "wordOrder", "programming"] },
   imageUrl: { type: String, required: true },
   // Ein Absatz kann auch ohne Topic gespeichert werden (z.B. die Aufgabe eines
   // Buch-Quizzes), deshalb ist das Feld nicht mehr verpflichtend.
@@ -332,6 +338,16 @@ const ExerciseSchema: Schema = new Schema({
   guessedSentences: { type: [TwoPartSentencesSchema], required: false },
   // word order: der Satz, den der Benutzer rekonstruieren muss.
   wordorder: { type: WordOrderSentenceSchema, required: false },
+  // programming: language, solution/signature and test cases.
+  programminglanguage: {
+    type: String,
+    required: false,
+    enum: ["JavaScript", "TypeScript"],
+  },
+  function: { type: String, required: false },
+  // A boolean expression that must evaluate to true, e.g.
+  // "max([7,9,4]) == 9 && max([3,2,1]) == 3".
+  testcases: { type: String, required: false },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

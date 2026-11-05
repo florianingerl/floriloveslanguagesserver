@@ -7,6 +7,7 @@ import {
   besitzerId,
   besitzPruefenMitAdmin,
 } from "../../helpers/ownership";
+import { runProgrammingExercise } from "../../helpers/programmingRunner";
 
 // Eine quiz-Angabe kann eine 24-stellige Mongo-Id sein (neu) oder das Fach
 // eines Website-Quizzes (alt, z.B. "deutsch"). Aus dem Fach wird die Id des
@@ -137,6 +138,65 @@ export const updateExercise = async (
     }
     await exercise.populate("school");
     res.json(exercise);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(400).json({ message: "An unknown error occurred" });
+    }
+  }
+};
+
+// Validates a programming exercise. The student sends the submitted code; the
+// test cases and the expected function name come from the stored exercise.
+export const validateProgrammingExercise = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const exercise = await Exercise.findById(req.params.id);
+    if (!exercise) {
+      res.status(404).json({ message: "Exercise not found" });
+      return;
+    }
+    if (exercise.type !== "programming") {
+      res.status(400).json({ message: "Exercise is not a programming exercise" });
+      return;
+    }
+
+    const code = typeof req.body.code === "string" ? req.body.code : "";
+    if (!code.trim()) {
+      res.status(400).json({ message: "No code was submitted" });
+      return;
+    }
+    if (code.length > 20000) {
+      res.status(400).json({ message: "The submitted code is too long" });
+      return;
+    }
+    if (!exercise.programminglanguage) {
+      res.status(400).json({ message: "The exercise has no programming language" });
+      return;
+    }
+    if (!exercise.function) {
+      res.status(400).json({ message: "The exercise has no function solution" });
+      return;
+    }
+    if (!exercise.testcases || !exercise.testcases.trim()) {
+      res.status(400).json({ message: "The exercise has no test cases" });
+      return;
+    }
+    if (exercise.testcases.length > 20000) {
+      res.status(400).json({ message: "The test cases are too long" });
+      return;
+    }
+
+    const result = runProgrammingExercise({
+      language: exercise.programminglanguage,
+      code,
+      solution: exercise.function,
+      expression: exercise.testcases,
+    });
+    res.json(result);
   } catch (error) {
     if (error instanceof Error) {
       res.status(400).json({ message: error.message });
