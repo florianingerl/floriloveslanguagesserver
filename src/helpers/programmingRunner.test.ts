@@ -5,6 +5,7 @@ import {
   extractParameterNames,
   formatValue,
   functionSignatureSkeleton,
+  isLeanAvailable,
   runProgrammingExercise,
 } from "./programmingRunner";
 
@@ -35,10 +36,10 @@ function testValueConversion(): void {
   assert.strictEqual(formatValue(undefined), "undefined");
 }
 
-function testJavaScript(): void {
+async function testJavaScript(): Promise<void> {
   const solution = "function add(a, b) { return a + b; }";
 
-  const passed = runProgrammingExercise({
+  const passed = await runProgrammingExercise({
     language: "JavaScript",
     code: solution,
     solution,
@@ -47,7 +48,7 @@ function testJavaScript(): void {
   assert.strictEqual(passed.passed, true);
   assert.strictEqual(passed.actual, "true");
 
-  const failed = runProgrammingExercise({
+  const failed = await runProgrammingExercise({
     language: "JavaScript",
     code: "function add(a, b) { return a - b; }",
     solution,
@@ -57,11 +58,11 @@ function testJavaScript(): void {
   assert.strictEqual(failed.actual, "false");
 }
 
-function testTypeScript(): void {
+async function testTypeScript(): Promise<void> {
   const solution =
     "function add(a: number, b: number): number { return a + b; }";
 
-  const result = runProgrammingExercise({
+  const result = await runProgrammingExercise({
     language: "TypeScript",
     code: solution,
     solution,
@@ -70,10 +71,10 @@ function testTypeScript(): void {
   assert.strictEqual(result.passed, true);
 }
 
-function testErrors(): void {
+async function testErrors(): Promise<void> {
   const solution = "function add(a, b) { return a + b; }";
 
-  const compileError = runProgrammingExercise({
+  const compileError = await runProgrammingExercise({
     language: "TypeScript",
     code: "function add(a: number {",
     solution,
@@ -82,7 +83,7 @@ function testErrors(): void {
   assert.strictEqual(compileError.passed, false);
   assert.ok(compileError.error);
 
-  const runtimeError = runProgrammingExercise({
+  const runtimeError = await runProgrammingExercise({
     language: "JavaScript",
     code: 'function add() { throw new Error("boom"); }',
     solution,
@@ -91,7 +92,7 @@ function testErrors(): void {
   assert.strictEqual(runtimeError.passed, false);
   assert.match(runtimeError.error ?? "", /boom/);
 
-  const missingFunction = runProgrammingExercise({
+  const missingFunction = await runProgrammingExercise({
     language: "JavaScript",
     code: "const add = 3;",
     solution,
@@ -100,7 +101,7 @@ function testErrors(): void {
   assert.strictEqual(missingFunction.passed, false);
   assert.match(missingFunction.error ?? "", /not found/);
 
-  const emptyExpression = runProgrammingExercise({
+  const emptyExpression = await runProgrammingExercise({
     language: "JavaScript",
     code: solution,
     solution,
@@ -109,7 +110,7 @@ function testErrors(): void {
   assert.strictEqual(emptyExpression.passed, false);
   assert.match(emptyExpression.error ?? "", /no test cases/);
 
-  const timeout = runProgrammingExercise({
+  const timeout = await runProgrammingExercise({
     language: "JavaScript",
     code: "function spin() { while (true) {} }",
     solution: "function spin() { while (true) {} }",
@@ -120,13 +121,56 @@ function testErrors(): void {
   assert.ok(timeout.error);
 }
 
-function runTests(): void {
+async function testLean(): Promise<void> {
+  if (!isLeanAvailable()) {
+    console.log("Lean 4 is not installed; skipping Lean tests");
+    return;
+  }
+
+  const timeoutMs = 60000;
+
+  const funSolution = "def double := fun (x : Nat) => x + x";
+  const funPassed = await runProgrammingExercise({
+    language: "Lean 4",
+    code: funSolution,
+    solution: funSolution,
+    expression: "example : double 7 = 14 := rfl",
+    timeoutMs,
+  });
+  assert.strictEqual(funPassed.passed, true, funPassed.error ?? "");
+
+  const defSolution = "def double (x : Nat) : Nat := x + x";
+  const defPassed = await runProgrammingExercise({
+    language: "Lean 4",
+    code: defSolution,
+    solution: defSolution,
+    expression: "example : double 7 = 14 := rfl",
+    timeoutMs,
+  });
+  assert.strictEqual(defPassed.passed, true, defPassed.error ?? "");
+
+  const failed = await runProgrammingExercise({
+    language: "Lean 4",
+    code: "def double (x : Nat) : Nat := x + 1",
+    solution: defSolution,
+    expression: "example : double 7 = 14 := rfl",
+    timeoutMs,
+  });
+  assert.strictEqual(failed.passed, false);
+  assert.ok(failed.error);
+}
+
+async function runTests(): Promise<void> {
   testSignatureParsing();
   testValueConversion();
-  testJavaScript();
-  testTypeScript();
-  testErrors();
+  await testJavaScript();
+  await testTypeScript();
+  await testErrors();
+  await testLean();
   console.log("programming runner tests passed");
 }
 
-runTests();
+runTests().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

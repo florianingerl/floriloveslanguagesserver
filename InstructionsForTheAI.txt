@@ -587,6 +587,14 @@ def double := fun (x:Nat ) => x+x
 Testcases:
 example: double 7 = 9 := rfl  
 
+Another example:
+Function to be implemented:
+def f : Nat → Nat := fun x => x + 3
+
+Testcases:
+example : f 10 = 13 ∧ f 20 = 23 := by
+  constructor <;> rfl
+
 In VueExercise, the textarea should only be prefilled
 with the signature of the function, so not the stuff behind =>
 
@@ -598,6 +606,9 @@ If the user clicks on Validate
 his written function and below the test should be put
 in a file called amen.lean and be compiled with lean amen.lean
 If there is no output, the exercise was solved correctly !
+
+Currently Lean 4 is only installed on my local machine, but that's enough for you to 
+test. Later I will have to install Lean 4 on my production ubuntu VPS server.
 
 
 

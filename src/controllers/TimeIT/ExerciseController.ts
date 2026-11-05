@@ -190,7 +190,7 @@ export const validateProgrammingExercise = async (
       return;
     }
 
-    const result = runProgrammingExercise({
+    const result = await runProgrammingExercise({
       language: exercise.programminglanguage,
       code,
       solution: exercise.function,

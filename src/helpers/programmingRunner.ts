@@ -1,5 +1,10 @@
 import vm from "vm";
 import ts from "typescript";
+import { execFile, execFileSync } from "child_process";
+import { existsSync } from "fs";
+import { promises as fs } from "fs";
+import os from "os";
+import path from "path";
 
 // A programming exercise is validated by evaluating one boolean expression in
 // the same sandbox as the submitted function. The expression calls the
@@ -26,10 +31,40 @@ export interface RunProgrammingExerciseOptions {
 }
 
 const DEFAULT_TIMEOUT_MS = 1000;
+const DEFAULT_LEAN_TIMEOUT_MS = 15000;
+const LEAN_FILE_NAME = "amen.lean";
 
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return String(error);
+}
+
+// Lean 4 is a local executable. LEAN_BIN wins, then the standard elan install
+// location, then whatever "lean" resolves to on the PATH.
+export function resolveLeanBinary(): string {
+  if (process.env.LEAN_BIN) return process.env.LEAN_BIN;
+
+  const candidate = path.join(
+    os.homedir(),
+    ".elan",
+    "bin",
+    process.platform === "win32" ? "lean.exe" : "lean",
+  );
+  if (existsSync(candidate)) return candidate;
+
+  return "lean";
+}
+
+export function isLeanAvailable(): boolean {
+  try {
+    execFileSync(resolveLeanBinary(), ["--version"], {
+      stdio: "ignore",
+      timeout: 5000,
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // Finds the matching closing bracket while ignoring brackets inside strings,
@@ -279,9 +314,71 @@ function compileTypeScript(code: string): { code?: string; error?: string } {
   return { code: result.outputText };
 }
 
-export function runProgrammingExercise(
+function leanErrorMessage(error: unknown): string {
+  const candidate = error as NodeJS.ErrnoException & { killed?: boolean };
+  if (candidate.code === "ENOENT") {
+    return "Lean 4 is not installed. Set LEAN_BIN to the Lean executable.";
+  }
+  if (candidate.killed) {
+    return "Lean compilation timed out.";
+  }
+  return errorMessage(error);
+}
+
+// Lean exercises are validated by compiling the submitted code together with
+// the stored test declarations. Lean prints nothing when the file is accepted,
+// so any output (including warnings) means the exercise is not solved.
+async function runLeanExercise(
   options: RunProgrammingExerciseOptions,
-): ProgrammingValidationResult {
+  expression: string,
+): Promise<ProgrammingValidationResult> {
+  const timeout = options.timeoutMs ?? DEFAULT_LEAN_TIMEOUT_MS;
+  const source = `${options.code.trimEnd()}\n\n${expression}\n`;
+  let directory = "";
+
+  try {
+    directory = await fs.mkdtemp(path.join(os.tmpdir(), "lean-exercise-"));
+    await fs.writeFile(path.join(directory, LEAN_FILE_NAME), source, "utf8");
+
+    const output = await new Promise<string>((resolve) => {
+      execFile(
+        resolveLeanBinary(),
+        [LEAN_FILE_NAME],
+        {
+          cwd: directory,
+          timeout,
+          windowsHide: true,
+          maxBuffer: 1024 * 1024,
+        },
+        (error, stdout, stderr) => {
+          const combined = `${stdout}${stderr}`.trim();
+          if (combined) {
+            resolve(combined);
+          } else if (error) {
+            resolve(leanErrorMessage(error));
+          } else {
+            resolve("");
+          }
+        },
+      );
+    });
+
+    if (output) {
+      return { passed: false, expression, error: output };
+    }
+    return { passed: true, expression };
+  } catch (error) {
+    return { passed: false, expression, error: leanErrorMessage(error) };
+  } finally {
+    if (directory) {
+      await fs.rm(directory, { recursive: true, force: true }).catch(() => undefined);
+    }
+  }
+}
+
+export async function runProgrammingExercise(
+  options: RunProgrammingExerciseOptions,
+): Promise<ProgrammingValidationResult> {
   const timeout = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const expression = options.expression.trim();
   if (!expression) {
@@ -289,6 +386,10 @@ export function runProgrammingExercise(
       passed: false,
       error: "The exercise has no test cases.",
     };
+  }
+
+  if (options.language === "Lean 4") {
+    return runLeanExercise(options, expression);
   }
 
   const functionName = extractFunctionName(options.solution);
