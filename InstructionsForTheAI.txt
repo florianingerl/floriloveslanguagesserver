@@ -611,8 +611,33 @@ Currently Lean 4 is only installed on my local machine, but that's enough for yo
 test. Later I will have to install Lean 4 on my production ubuntu VPS server.
 
 
+93) Update/Correction to instruction 92
+The creator of the exercise should have full control of how the text area, where the user has to enter 
+his solution, is prefilled
 
+In the "function to be implemented (and its solution)" field,
+the user can type in the whole solution. But he comments out the solution that the user has to find.
+The text area, where the user has to enter his solution, is thus prefilled with the function with
+all multiline and single line comments (in the respective language) removed !
+Example for JavaScript:
+Function to be implemented:
+fun greaterZero( x ) {
+	/*
+	  return x > 0;
+	*/
+}
+So the text area is prefilled with the comments and what is inside the comment removed.
+When the solution is displayed, only the comment is removed but not what was inside.
 
+The same thing should also work for Lean 4 (although multiline and single line comments work differently here ).
+Also for the exercises you created for Lean 4. Please remove the instructions that are there now !
+The instructions should just be : "Implement the function <name of the function> !" Don't spoil the signature of the function.
+In those Lean 4 exercises, the whole solution should be commented out, so the user also has to find the right signature of the function.
+
+94) In the advanced filter dialog, you should be able to filter for the type
+of the exercise.
+The type of the exercise should then appear in the browser url (hard write back)
+and this link should also be copied to the clipboard and displayed in a toaster !
 
 1000)4-Stunden-Lernpaket-Mit-Bonus:   
 4*(30+5) Euro für 4*60min falls du dein Ziel (z.B. Bestehen der Klausur) erreichst und 4*(30-5) Euro, falls du dein Ziel verfehlst

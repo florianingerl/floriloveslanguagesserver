@@ -1,7 +1,6 @@
 import vm from "vm";
 import ts from "typescript";
 import { execFile, execFileSync } from "child_process";
-import { existsSync } from "fs";
 import { promises as fs } from "fs";
 import os from "os";
 import path from "path";
@@ -39,20 +38,10 @@ function errorMessage(error: unknown): string {
   return String(error);
 }
 
-// Lean 4 is a local executable. LEAN_BIN wins, then the standard elan install
-// location, then whatever "lean" resolves to on the PATH.
+// Lean 4 is a local executable. LEAN_BIN wins; otherwise Lean must be on the
+// PATH of the server process.
 export function resolveLeanBinary(): string {
-  if (process.env.LEAN_BIN) return process.env.LEAN_BIN;
-
-  const candidate = path.join(
-    os.homedir(),
-    ".elan",
-    "bin",
-    process.platform === "win32" ? "lean.exe" : "lean",
-  );
-  if (existsSync(candidate)) return candidate;
-
-  return "lean";
+  return process.env.LEAN_BIN || "lean";
 }
 
 export function isLeanAvailable(): boolean {
@@ -317,7 +306,7 @@ function compileTypeScript(code: string): { code?: string; error?: string } {
 function leanErrorMessage(error: unknown): string {
   const candidate = error as NodeJS.ErrnoException & { killed?: boolean };
   if (candidate.code === "ENOENT") {
-    return "Lean 4 is not installed. Set LEAN_BIN to the Lean executable.";
+    return `Lean 4 executable "${resolveLeanBinary()}" was not found. Make sure it is on the PATH of the server process or set LEAN_BIN in the service environment.`;
   }
   if (candidate.killed) {
     return "Lean compilation timed out.";

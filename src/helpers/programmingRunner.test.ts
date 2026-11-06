@@ -6,6 +6,7 @@ import {
   formatValue,
   functionSignatureSkeleton,
   isLeanAvailable,
+  resolveLeanBinary,
   runProgrammingExercise,
 } from "./programmingRunner";
 
@@ -26,6 +27,10 @@ function testSignatureParsing(): void {
     "function add(a: number, b?: number): number {\n  \n}",
   );
   assert.strictEqual(functionSignatureSkeleton("not a function"), "");
+
+  const commentedSolution =
+    "function add(a, b) {\n  // return a + b;\n}";
+  assert.strictEqual(extractFunctionName(commentedSolution), "add");
 }
 
 function testValueConversion(): void {
@@ -65,6 +70,18 @@ async function testTypeScript(): Promise<void> {
   const result = await runProgrammingExercise({
     language: "TypeScript",
     code: solution,
+    solution,
+    expression: "add(2, 3) == 5",
+  });
+  assert.strictEqual(result.passed, true);
+}
+
+async function testCommentedSolution(): Promise<void> {
+  const solution = "function add(a, b) {\n  // return a + b;\n}";
+
+  const result = await runProgrammingExercise({
+    language: "JavaScript",
+    code: "function add(a, b) { return a + b; }",
     solution,
     expression: "add(2, 3) == 5",
   });
@@ -121,6 +138,20 @@ async function testErrors(): Promise<void> {
   assert.ok(timeout.error);
 }
 
+function testLeanBinaryResolution(): void {
+  const previous = process.env.LEAN_BIN;
+  try {
+    process.env.LEAN_BIN = "/custom/lean";
+    assert.strictEqual(resolveLeanBinary(), "/custom/lean");
+
+    delete process.env.LEAN_BIN;
+    assert.strictEqual(resolveLeanBinary(), "lean");
+  } finally {
+    if (previous === undefined) delete process.env.LEAN_BIN;
+    else process.env.LEAN_BIN = previous;
+  }
+}
+
 async function testLean(): Promise<void> {
   if (!isLeanAvailable()) {
     console.log("Lean 4 is not installed; skipping Lean tests");
@@ -165,7 +196,9 @@ async function runTests(): Promise<void> {
   testValueConversion();
   await testJavaScript();
   await testTypeScript();
+  await testCommentedSolution();
   await testErrors();
+  testLeanBinaryResolution();
   await testLean();
   console.log("programming runner tests passed");
 }
