@@ -1,6 +1,7 @@
 import vm from "vm";
 import ts from "typescript";
-import { execFile, execFileSync } from "child_process";
+import { execFile, execFileSync, spawn, type ChildProcess } from "child_process";
+import { randomUUID } from "crypto";
 import { promises as fs } from "fs";
 import os from "os";
 import path from "path";
@@ -32,6 +33,19 @@ export interface RunProgrammingExerciseOptions {
 const DEFAULT_TIMEOUT_MS = 1000;
 const DEFAULT_LEAN_TIMEOUT_MS = 15000;
 const LEAN_FILE_NAME = "amen.lean";
+const DEFAULT_PYTHON_TIMEOUT_MS = 5000;
+const DEFAULT_PYTHON_MEMORY_MB = 64;
+const DEFAULT_PYTHON_CPU_SECONDS = 2;
+const DEFAULT_PYTHON_MAX_OUTPUT_BYTES = 1024 * 1024;
+const PYTHON_FILE_NAME = "runner.py";
+const PYTHON_MAX_PROCESSES = 16;
+const PYTHON_MAX_OPEN_FILES = 32;
+const PYTHON_MAX_FILE_SIZE_BYTES = 1024 * 1024;
+const PYTHON_MAX_CONCURRENT = positiveIntegerFromEnv("PYTHON_MAX_CONCURRENT", 2);
+const PYTHON_MAX_QUEUE = positiveIntegerFromEnv("PYTHON_MAX_QUEUE", 10);
+
+let activePythonRuns = 0;
+const pythonQueue: Array<() => void> = [];
 
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -54,6 +68,175 @@ export function isLeanAvailable(): boolean {
   } catch {
     return false;
   }
+}
+
+// Python runs locally. PYTHON_BIN wins; otherwise use the usual executable
+// name for the current platform.
+export function resolvePythonBinary(): string {
+  return process.env.PYTHON_BIN || (process.platform === "win32" ? "python" : "python3");
+}
+
+export function isPythonAvailable(): boolean {
+  try {
+    execFileSync(resolvePythonBinary(), ["--version"], {
+      stdio: "ignore",
+      timeout: 5000,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function positiveIntegerFromEnv(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  const value = Number(raw);
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : fallback;
+}
+
+function releasePythonSlot(): void {
+  activePythonRuns = Math.max(0, activePythonRuns - 1);
+  const next = pythonQueue.shift();
+  if (next) next();
+}
+
+function acquirePythonSlot(): Promise<(() => void) | null> {
+  if (activePythonRuns < PYTHON_MAX_CONCURRENT) {
+    activePythonRuns++;
+    return Promise.resolve(releasePythonSlot);
+  }
+  if (pythonQueue.length >= PYTHON_MAX_QUEUE) {
+    return Promise.resolve(null);
+  }
+  return new Promise((resolve) => {
+    pythonQueue.push(() => {
+      activePythonRuns++;
+      resolve(releasePythonSlot);
+    });
+  });
+}
+
+interface ProcessRunResult {
+  stdout: string;
+  stderr: string;
+  code: number | null;
+  signal: NodeJS.Signals | null;
+  timedOut: boolean;
+  outputLimitExceeded: boolean;
+  spawnError?: unknown;
+}
+
+function killProcessTree(child: ChildProcess): void {
+  const pid = child.pid;
+  if (!pid) return;
+
+  if (process.platform === "win32") {
+    const killer = spawn("taskkill", ["/pid", String(pid), "/T", "/F"], {
+      windowsHide: true,
+      stdio: "ignore",
+    });
+    killer.on("error", () => {
+      try {
+        child.kill();
+      } catch {
+        // The process may already have exited.
+      }
+    });
+    return;
+  }
+
+  // detached: true makes the child the leader of its own process group.
+  try {
+    process.kill(-pid, "SIGKILL");
+  } catch {
+    try {
+      child.kill("SIGKILL");
+    } catch {
+      // The process may already have exited.
+    }
+  }
+}
+
+function runProcessWithLimits(
+  command: string,
+  args: string[],
+  options: {
+    cwd: string;
+    env: NodeJS.ProcessEnv;
+    timeoutMs: number;
+    maxOutputBytes?: number;
+  },
+): Promise<ProcessRunResult> {
+  const maxOutputBytes = options.maxOutputBytes ?? DEFAULT_PYTHON_MAX_OUTPUT_BYTES;
+
+  return new Promise((resolve) => {
+    let stdout = "";
+    let stderr = "";
+    let timedOut = false;
+    let outputLimitExceeded = false;
+    let settled = false;
+    let timer: NodeJS.Timeout | undefined;
+
+    const finish = (
+      code: number | null,
+      signal: NodeJS.Signals | null,
+      spawnError?: unknown,
+    ): void => {
+      if (settled) return;
+      settled = true;
+      if (timer) clearTimeout(timer);
+      resolve({
+        stdout,
+        stderr,
+        code,
+        signal,
+        timedOut,
+        outputLimitExceeded,
+        spawnError,
+      });
+    };
+
+    let child: ChildProcess;
+    try {
+      child = spawn(command, args, {
+        cwd: options.cwd,
+        env: options.env,
+        windowsHide: true,
+        detached: process.platform !== "win32",
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+    } catch (error) {
+      finish(null, null, error);
+      return;
+    }
+
+    timer = setTimeout(() => {
+      timedOut = true;
+      killProcessTree(child);
+    }, options.timeoutMs);
+
+    child.stdout?.on("data", (chunk: Buffer) => {
+      if (outputLimitExceeded) return;
+      if (Buffer.byteLength(stdout) + chunk.length > maxOutputBytes) {
+        outputLimitExceeded = true;
+        killProcessTree(child);
+        return;
+      }
+      stdout += chunk.toString("utf8");
+    });
+    child.stderr?.on("data", (chunk: Buffer) => {
+      if (outputLimitExceeded) return;
+      if (Buffer.byteLength(stderr) + chunk.length > maxOutputBytes) {
+        outputLimitExceeded = true;
+        killProcessTree(child);
+        return;
+      }
+      stderr += chunk.toString("utf8");
+    });
+    child.on("error", (error) => finish(null, null, error));
+    child.on("close", (code, signal) => finish(code, signal));
+  });
 }
 
 // Finds the matching closing bracket while ignoring brackets inside strings,
@@ -365,6 +548,295 @@ async function runLeanExercise(
   }
 }
 
+function pythonEnvironment(directory: string): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = {};
+  // Do not pass the server's environment to untrusted code. In particular, it
+  // must not see database credentials or mail API secrets.
+  for (const key of [
+    "PATH",
+    "PATHEXT",
+    "SYSTEMROOT",
+    "WINDIR",
+    "COMSPEC",
+    "LANG",
+    "LC_ALL",
+  ]) {
+    const value = process.env[key];
+    if (value !== undefined) env[key] = value;
+  }
+
+  env.HOME = directory;
+  env.USERPROFILE = directory;
+  env.TMP = directory;
+  env.TEMP = directory;
+  env.TMPDIR = directory;
+  env.PYTHONIOENCODING = "utf-8";
+  env.PYTHONDONTWRITEBYTECODE = "1";
+  env.PYTHONNOUSERSITE = "1";
+  env.LANG = "C.UTF-8";
+  env.LC_ALL = "C.UTF-8";
+  return env;
+}
+
+function buildPythonHarness(
+  code: string,
+  expression: string,
+  passMarker: string,
+  failMarker: string,
+  limits: {
+    cpuSeconds: number;
+    memoryBytes: number;
+    maxProcesses: number;
+    maxOpenFiles: number;
+    maxFileSizeBytes: number;
+  },
+): string {
+  return `import os
+import sys
+import traceback
+
+try:
+    import resource
+except ImportError:
+    resource = None
+
+def __fl_limit(kind, value):
+    if resource is None:
+        return
+    try:
+        soft, hard = resource.getrlimit(kind)
+        if hard != resource.RLIM_INFINITY:
+            value = min(value, hard)
+        resource.setrlimit(kind, (value, value))
+    except Exception:
+        pass
+
+if resource is not None:
+    __fl_limit(resource.RLIMIT_CPU, ${limits.cpuSeconds})
+    __fl_limit(resource.RLIMIT_AS, ${limits.memoryBytes})
+    __fl_limit(resource.RLIMIT_FSIZE, ${limits.maxFileSizeBytes})
+    __fl_limit(resource.RLIMIT_NOFILE, ${limits.maxOpenFiles})
+    __fl_limit(resource.RLIMIT_CORE, 0)
+    if hasattr(resource, "RLIMIT_NPROC"):
+        __fl_limit(resource.RLIMIT_NPROC, ${limits.maxProcesses})
+
+__fl_cwd = os.path.realpath(os.getcwd())
+__fl_harness_path = os.path.realpath("runner.py")
+__fl_allowed_roots = []
+for __fl_root in (sys.prefix, sys.base_prefix, sys.exec_prefix, *sys.path):
+    if not __fl_root:
+        continue
+    try:
+        __fl_root = os.path.realpath(__fl_root)
+        if __fl_root != __fl_cwd:
+            __fl_allowed_roots.append(__fl_root)
+    except Exception:
+        pass
+__fl_system_root = os.environ.get("SYSTEMROOT") or os.environ.get("WINDIR")
+if __fl_system_root:
+    __fl_allowed_roots.append(os.path.realpath(__fl_system_root))
+if os.name == "posix":
+    __fl_allowed_roots.append(os.path.realpath("/etc/localtime"))
+__fl_allowed_roots = tuple(set(__fl_allowed_roots))
+
+__fl_realpath = os.path.realpath
+__fl_fsdecode = os.fsdecode
+__fl_sep = os.sep
+__fl_write_flags = os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND
+__fl_isinstance = isinstance
+__fl_any = any
+__fl_len = len
+__fl_str = str
+__fl_bytes = bytes
+__fl_int = int
+__fl_PermissionError = PermissionError
+
+def __fl_audit(event, args):
+    blocked_events = (
+        "subprocess.Popen",
+        "os.system",
+        "os.exec",
+        "os.posix_spawn",
+        "os.spawn",
+        "os.fork",
+        "os.forkpty",
+        "os.kill",
+        "os.remove",
+        "os.rename",
+        "os.rmdir",
+        "os.mkdir",
+        "os.chmod",
+        "os.chown",
+        "os.link",
+        "os.symlink",
+        "os.truncate",
+        "ctypes.dlopen",
+        "ctypes.dlsym",
+        "ctypes.call_function",
+    )
+    if event in blocked_events or event.startswith("socket."):
+        raise __fl_PermissionError("This operation is not allowed in programming exercises.")
+    if event == "open":
+        path = args[0] if __fl_len(args) > 0 else ""
+        mode = args[1] if __fl_len(args) > 1 else "r"
+        flags = args[2] if __fl_len(args) > 2 else 0
+        if __fl_isinstance(mode, __fl_str) and __fl_any(flag in mode for flag in "wax+"):
+            raise __fl_PermissionError("Writing files is not allowed in programming exercises.")
+        if __fl_isinstance(flags, __fl_int) and flags & __fl_write_flags:
+            raise __fl_PermissionError("Writing files is not allowed in programming exercises.")
+        if __fl_isinstance(path, (__fl_str, __fl_bytes)):
+            try:
+                resolved = __fl_realpath(__fl_fsdecode(path))
+            except Exception:
+                resolved = __fl_fsdecode(path)
+            if resolved == __fl_harness_path or not __fl_any(
+                resolved == root or resolved.startswith(root + __fl_sep)
+                for root in __fl_allowed_roots
+            ):
+                raise __fl_PermissionError("Reading this file is not allowed in programming exercises.")
+
+sys.addaudithook(__fl_audit)
+
+__fl_compile = compile
+__fl_exec = exec
+__fl_eval = eval
+__fl_bool = bool
+__fl_print = print
+__fl_SystemExit = SystemExit
+
+__fl_namespace = {"__name__": "__main__", "__file__": "exercise.py"}
+__fl_code = ${JSON.stringify(code)}
+__fl_expression = ${JSON.stringify(expression)}
+try:
+    __fl_exec(__fl_compile(__fl_code, "exercise.py", "exec"), __fl_namespace, __fl_namespace)
+    __fl_result = __fl_bool(__fl_eval(__fl_expression, __fl_namespace, __fl_namespace))
+except BaseException:
+    traceback.print_exc()
+    raise __fl_SystemExit(2)
+
+if __fl_result:
+    __fl_print(${JSON.stringify(passMarker)})
+    raise __fl_SystemExit(0)
+
+__fl_print(${JSON.stringify(failMarker)})
+raise __fl_SystemExit(1)
+`;
+}
+
+function pythonErrorMessage(error: unknown): string {
+  const candidate = error as NodeJS.ErrnoException & { killed?: boolean };
+  if (candidate.code === "ENOENT") {
+    return `Python executable "${resolvePythonBinary()}" was not found. Make sure Python is installed on the server or set PYTHON_BIN in the service environment.`;
+  }
+  if (candidate.killed) {
+    return "Python execution timed out.";
+  }
+  return errorMessage(error);
+}
+
+async function runPythonExercise(
+  options: RunProgrammingExerciseOptions,
+  expression: string,
+): Promise<ProgrammingValidationResult> {
+  const timeout = options.timeoutMs ?? positiveIntegerFromEnv(
+    "PYTHON_TIMEOUT_MS",
+    DEFAULT_PYTHON_TIMEOUT_MS,
+  );
+  const memoryMb = positiveIntegerFromEnv("PYTHON_MEMORY_MB", DEFAULT_PYTHON_MEMORY_MB);
+  const cpuSeconds = positiveIntegerFromEnv("PYTHON_CPU_SECONDS", DEFAULT_PYTHON_CPU_SECONDS);
+  const passMarker = `__FL_PYTHON_PASS_${randomUUID()}__`;
+  const failMarker = `__FL_PYTHON_FAIL_${randomUUID()}__`;
+  const harness = buildPythonHarness(options.code, expression, passMarker, failMarker, {
+    cpuSeconds,
+    memoryBytes: memoryMb * 1024 * 1024,
+    maxProcesses: PYTHON_MAX_PROCESSES,
+    maxOpenFiles: PYTHON_MAX_OPEN_FILES,
+    maxFileSizeBytes: PYTHON_MAX_FILE_SIZE_BYTES,
+  });
+  const releaseSlot = await acquirePythonSlot();
+  if (!releaseSlot) {
+    return {
+      passed: false,
+      expression,
+      error: "Too many Python exercises are being validated right now. Please try again in a moment.",
+    };
+  }
+  let directory = "";
+
+  try {
+    directory = await fs.mkdtemp(path.join(os.tmpdir(), "python-exercise-"));
+    await fs.writeFile(path.join(directory, PYTHON_FILE_NAME), harness, "utf8");
+
+    const result = await runProcessWithLimits(
+      resolvePythonBinary(),
+      ["-I", "-B", PYTHON_FILE_NAME],
+      {
+        cwd: directory,
+        env: pythonEnvironment(directory),
+        timeoutMs: timeout,
+      },
+    );
+
+    if (result.spawnError) {
+      return { passed: false, expression, error: pythonErrorMessage(result.spawnError) };
+    }
+    if (result.stdout.includes(passMarker)) {
+      return { passed: true, expression, actual: "true" };
+    }
+    if (result.stdout.includes(failMarker)) {
+      return { passed: false, expression, actual: "false" };
+    }
+    if (result.timedOut) {
+      return {
+        passed: false,
+        expression,
+        error: `Python execution timed out after ${timeout} ms.`,
+      };
+    }
+    if (result.outputLimitExceeded) {
+      return {
+        passed: false,
+        expression,
+        error: "Python produced too much output.",
+      };
+    }
+    if (result.signal === "SIGXCPU" || result.signal === "SIGKILL") {
+      return {
+        passed: false,
+        expression,
+        error: "Python execution exceeded its CPU or time limit.",
+      };
+    }
+
+    const output = [result.stderr, result.stdout]
+      .filter((part) => part.trim() !== "")
+      .join("\n")
+      .trim();
+    if (output) {
+      return { passed: false, expression, error: output };
+    }
+    if (result.code !== 0) {
+      return {
+        passed: false,
+        expression,
+        error: `Python execution failed with exit code ${result.code ?? "unknown"}.`,
+      };
+    }
+    return {
+      passed: false,
+      expression,
+      error: "Python did not produce a test result.",
+    };
+  } catch (error) {
+    return { passed: false, expression, error: pythonErrorMessage(error) };
+  } finally {
+    if (directory) {
+      await fs.rm(directory, { recursive: true, force: true }).catch(() => undefined);
+    }
+    releaseSlot();
+  }
+}
+
 export async function runProgrammingExercise(
   options: RunProgrammingExerciseOptions,
 ): Promise<ProgrammingValidationResult> {
@@ -379,6 +851,10 @@ export async function runProgrammingExercise(
 
   if (options.language === "Lean 4") {
     return runLeanExercise(options, expression);
+  }
+
+  if (options.language === "Python") {
+    return runPythonExercise(options, expression);
   }
 
   const functionName = extractFunctionName(options.solution);

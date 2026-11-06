@@ -12,6 +12,11 @@ RUN npx tsc
 FROM node:22-slim
 WORKDIR /app
 ENV NODE_ENV=production
+# Python fuer die lokale Ausfuehrung von Programmieraufgaben. Der Runner setzt
+# fuer den Kindprozess harte Grenzen fuer CPU-Zeit, Speicher und Ausgabe.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 \
+    && rm -rf /var/lib/apt/lists/*
 COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist

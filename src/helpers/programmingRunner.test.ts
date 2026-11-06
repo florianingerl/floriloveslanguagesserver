@@ -1,4 +1,7 @@
 import assert from "assert";
+import { promises as fs } from "fs";
+import os from "os";
+import path from "path";
 import {
   extractFunctionName,
   extractFunctionSignature,
@@ -6,7 +9,9 @@ import {
   formatValue,
   functionSignatureSkeleton,
   isLeanAvailable,
+  isPythonAvailable,
   resolveLeanBinary,
+  resolvePythonBinary,
   runProgrammingExercise,
 } from "./programmingRunner";
 
@@ -152,6 +157,142 @@ function testLeanBinaryResolution(): void {
   }
 }
 
+function testPythonBinaryResolution(): void {
+  const previous = process.env.PYTHON_BIN;
+  try {
+    process.env.PYTHON_BIN = "/custom/python";
+    assert.strictEqual(resolvePythonBinary(), "/custom/python");
+
+    delete process.env.PYTHON_BIN;
+    assert.strictEqual(
+      resolvePythonBinary(),
+      process.platform === "win32" ? "python" : "python3",
+    );
+  } finally {
+    if (previous === undefined) delete process.env.PYTHON_BIN;
+    else process.env.PYTHON_BIN = previous;
+  }
+}
+
+async function testPython(): Promise<void> {
+  if (!isPythonAvailable()) {
+    console.log("Python is not installed; skipping Python tests");
+    return;
+  }
+
+  const solution = "def add(a, b):\n    return a + b";
+
+  const passed = await runProgrammingExercise({
+    language: "Python",
+    code: solution,
+    solution,
+    expression: "add(2, 3) == 5 and add(-1, 1) == 0",
+  });
+  assert.strictEqual(passed.passed, true, passed.error ?? "");
+  assert.strictEqual(passed.actual, "true");
+
+  const stdlib = await runProgrammingExercise({
+    language: "Python",
+    code: "import math\n\ndef add(a, b):\n    return a + b",
+    solution,
+    expression: "math.sqrt(9) == 3 and add(2, 3) == 5",
+  });
+  assert.strictEqual(stdlib.passed, true, stdlib.error ?? "");
+
+  const monkeypatched = await runProgrammingExercise({
+    language: "Python",
+    code:
+      "import builtins\nbuiltins.eval = lambda *args, **kwargs: True\nbuiltins.bool = lambda value: True\n\ndef add(a, b):\n    return a - b",
+    solution,
+    expression: "add(2, 3) == 5",
+  });
+  assert.strictEqual(monkeypatched.passed, false);
+  assert.strictEqual(monkeypatched.actual, "false");
+
+  const harnessRead = await runProgrammingExercise({
+    language: "Python",
+    code: "def add(a, b):\n    open('runner.py').read()\n    return a + b",
+    solution,
+    expression: "add(2, 3) == 5",
+  });
+  assert.strictEqual(harnessRead.passed, false);
+  assert.match(harnessRead.error ?? "", /not allowed/i);
+
+  const secretFile = path.join(
+    os.tmpdir(),
+    `python-read-secret-${process.pid}-${Date.now()}.txt`,
+  );
+  await fs.writeFile(secretFile, "secret", "utf8");
+  try {
+    const fileRead = await runProgrammingExercise({
+      language: "Python",
+      code: `def add(a, b):\n    with open(${JSON.stringify(secretFile)}, "r") as handle:\n        handle.read()\n    return a + b`,
+      solution,
+      expression: "add(2, 3) == 5",
+    });
+    assert.strictEqual(fileRead.passed, false);
+    assert.match(fileRead.error ?? "", /not allowed/i);
+  } finally {
+    await fs.rm(secretFile, { force: true });
+  }
+
+  const failed = await runProgrammingExercise({
+    language: "Python",
+    code: "def add(a, b):\n    return a - b",
+    solution,
+    expression: "add(2, 3) == 5",
+  });
+  assert.strictEqual(failed.passed, false);
+  assert.strictEqual(failed.actual, "false");
+
+  const syntaxError = await runProgrammingExercise({
+    language: "Python",
+    code: "def add(a, b)\n    return a + b",
+    solution,
+    expression: "add(2, 3) == 5",
+  });
+  assert.strictEqual(syntaxError.passed, false);
+  assert.ok(syntaxError.error);
+
+  const runtimeError = await runProgrammingExercise({
+    language: "Python",
+    code: "def add(a, b):\n    raise ValueError('boom')",
+    solution,
+    expression: "add(2, 3) == 5",
+  });
+  assert.strictEqual(runtimeError.passed, false);
+  assert.match(runtimeError.error ?? "", /boom/);
+
+  const timeout = await runProgrammingExercise({
+    language: "Python",
+    code: "def spin():\n    while True:\n        pass",
+    solution: "def spin():\n    pass",
+    expression: "spin()",
+    timeoutMs: 100,
+  });
+  assert.strictEqual(timeout.passed, false);
+  assert.match(timeout.error ?? "", /timed out|time limit/);
+
+  const fileWrite = await runProgrammingExercise({
+    language: "Python",
+    code: "def add(a, b):\n    open('x', 'w').write('x')\n    return a + b",
+    solution,
+    expression: "add(2, 3) == 5",
+  });
+  assert.strictEqual(fileWrite.passed, false);
+  assert.match(fileWrite.error ?? "", /not allowed/i);
+
+  const subprocess = await runProgrammingExercise({
+    language: "Python",
+    code:
+      "def add(a, b):\n    import subprocess\n    subprocess.run(['echo', 'x'])\n    return a + b",
+    solution,
+    expression: "add(2, 3) == 5",
+  });
+  assert.strictEqual(subprocess.passed, false);
+  assert.match(subprocess.error ?? "", /not allowed/i);
+}
+
 async function testLean(): Promise<void> {
   if (!isLeanAvailable()) {
     console.log("Lean 4 is not installed; skipping Lean tests");
@@ -199,6 +340,8 @@ async function runTests(): Promise<void> {
   await testCommentedSolution();
   await testErrors();
   testLeanBinaryResolution();
+  testPythonBinaryResolution();
+  await testPython();
   await testLean();
   console.log("programming runner tests passed");
 }

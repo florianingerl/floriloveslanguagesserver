@@ -639,6 +639,13 @@ of the exercise.
 The type of the exercise should then appear in the browser url (hard write back)
 and this link should also be copied to the clipboard and displayed in a toaster !
 
+95) Can you add support for the programming language Python. There is a REST-ful API online
+https://api.onlinecompiler.io/api/run-code-sync/ that can be used to compile and run Python-code.
+But Python is also installed on my local machine and I can install it on my remove ubunto VPS production
+server
+Choose whatever option you think is best.
+
+
 1000)4-Stunden-Lernpaket-Mit-Bonus:   
 4*(30+5) Euro für 4*60min falls du dein Ziel (z.B. Bestehen der Klausur) erreichst und 4*(30-5) Euro, falls du dein Ziel verfehlst
 Wenn du dein Ziel verfehlst, dann ist das nächste Paket für dich 3 Euro / h teurer, sonst wird es 1 Euro billiger.

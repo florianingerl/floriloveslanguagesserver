@@ -29,3 +29,4 @@ scripts/__pycache__/
 !.env.example
 credentials.json
 token.json
+mongodb.txt
