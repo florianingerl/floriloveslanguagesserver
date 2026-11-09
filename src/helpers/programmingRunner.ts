@@ -43,9 +43,19 @@ const PYTHON_MAX_OPEN_FILES = 32;
 const PYTHON_MAX_FILE_SIZE_BYTES = 1024 * 1024;
 const PYTHON_MAX_CONCURRENT = positiveIntegerFromEnv("PYTHON_MAX_CONCURRENT", 2);
 const PYTHON_MAX_QUEUE = positiveIntegerFromEnv("PYTHON_MAX_QUEUE", 10);
+const DEFAULT_JAVA_TIMEOUT_MS = 5000;
+const DEFAULT_JAVA_COMPILE_TIMEOUT_MS = 15000;
+const DEFAULT_JAVA_MEMORY_MB = 128;
+const DEFAULT_JAVA_MAX_OUTPUT_BYTES = 1024 * 1024;
+const JAVA_FILE_NAME = "Main.java";
+const JAVA_CLASS_NAME = "Main";
+const JAVA_MAX_CONCURRENT = positiveIntegerFromEnv("JAVA_MAX_CONCURRENT", 1);
+const JAVA_MAX_QUEUE = positiveIntegerFromEnv("JAVA_MAX_QUEUE", 10);
 
 let activePythonRuns = 0;
 const pythonQueue: Array<() => void> = [];
+let activeJavaRuns = 0;
+const javaQueue: Array<() => void> = [];
 
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -88,6 +98,43 @@ export function isPythonAvailable(): boolean {
   }
 }
 
+function javaExecutable(name: string): string {
+  const explicit = name === "java" ? process.env.JAVA_BIN : process.env.JAVAC_BIN;
+  if (explicit) return explicit;
+  const home = process.env.JAVA_HOME;
+  if (home) {
+    const fileName = process.platform === "win32" ? `${name}.exe` : name;
+    return path.join(home, "bin", fileName);
+  }
+  return name;
+}
+
+// Java runs locally. JAVA_BIN/JAVAC_BIN win; otherwise JAVA_HOME/bin or the
+// usual executable names on the PATH are used.
+export function resolveJavaBinary(): string {
+  return javaExecutable("java");
+}
+
+export function resolveJavacBinary(): string {
+  return javaExecutable("javac");
+}
+
+export function isJavaAvailable(): boolean {
+  try {
+    execFileSync(resolveJavacBinary(), ["-version"], {
+      stdio: "ignore",
+      timeout: 5000,
+    });
+    execFileSync(resolveJavaBinary(), ["-version"], {
+      stdio: "ignore",
+      timeout: 5000,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function positiveIntegerFromEnv(name: string, fallback: number): number {
   const raw = process.env[name];
   if (!raw) return fallback;
@@ -113,6 +160,28 @@ function acquirePythonSlot(): Promise<(() => void) | null> {
     pythonQueue.push(() => {
       activePythonRuns++;
       resolve(releasePythonSlot);
+    });
+  });
+}
+
+function releaseJavaSlot(): void {
+  activeJavaRuns = Math.max(0, activeJavaRuns - 1);
+  const next = javaQueue.shift();
+  if (next) next();
+}
+
+function acquireJavaSlot(): Promise<(() => void) | null> {
+  if (activeJavaRuns < JAVA_MAX_CONCURRENT) {
+    activeJavaRuns++;
+    return Promise.resolve(releaseJavaSlot);
+  }
+  if (javaQueue.length >= JAVA_MAX_QUEUE) {
+    return Promise.resolve(null);
+  }
+  return new Promise((resolve) => {
+    javaQueue.push(() => {
+      activeJavaRuns++;
+      resolve(releaseJavaSlot);
     });
   });
 }
@@ -837,6 +906,235 @@ async function runPythonExercise(
   }
 }
 
+function javaEnvironment(directory: string): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = {};
+  // Do not pass the server's environment to untrusted code. In particular, it
+  // must not see database credentials or mail API secrets.
+  for (const key of [
+    "PATH",
+    "PATHEXT",
+    "SYSTEMROOT",
+    "WINDIR",
+    "COMSPEC",
+    "LANG",
+    "LC_ALL",
+    "JAVA_HOME",
+    "LD_LIBRARY_PATH",
+  ]) {
+    const value = process.env[key];
+    if (value !== undefined) env[key] = value;
+  }
+
+  env.HOME = directory;
+  env.USERPROFILE = directory;
+  env.TMP = directory;
+  env.TEMP = directory;
+  env.TMPDIR = directory;
+  env.LANG = "C.UTF-8";
+  env.LC_ALL = "C.UTF-8";
+  return env;
+}
+
+function buildJavaSource(
+  code: string,
+  expression: string,
+  passMarker: string,
+  failMarker: string,
+): string {
+  return `import java.util.*;
+import java.util.stream.*;
+import java.util.function.*;
+
+public class ${JAVA_CLASS_NAME} {
+${code}
+
+  public static void main(String[] args) {
+    try {
+      boolean __flResult = (${expression});
+      System.out.println(__flResult ? ${JSON.stringify(passMarker)} : ${JSON.stringify(failMarker)});
+      System.exit(__flResult ? 0 : 1);
+    } catch (Throwable __flError) {
+      __flError.printStackTrace();
+      System.exit(2);
+    }
+  }
+}
+`;
+}
+
+function javaErrorMessage(error: unknown): string {
+  const candidate = error as NodeJS.ErrnoException & { killed?: boolean };
+  if (candidate.code === "ENOENT") {
+    return `Java executable "${resolveJavaBinary()}" or compiler "${resolveJavacBinary()}" was not found. Make sure Java is installed on the server or set JAVA_BIN/JAVAC_BIN in the service environment.`;
+  }
+  if (candidate.killed) {
+    return "Java execution timed out.";
+  }
+  return errorMessage(error);
+}
+
+async function runJavaExercise(
+  options: RunProgrammingExerciseOptions,
+  expression: string,
+): Promise<ProgrammingValidationResult> {
+  const compileTimeout = positiveIntegerFromEnv(
+    "JAVA_COMPILE_TIMEOUT_MS",
+    DEFAULT_JAVA_COMPILE_TIMEOUT_MS,
+  );
+  const runTimeout =
+    options.timeoutMs ??
+    positiveIntegerFromEnv("JAVA_TIMEOUT_MS", DEFAULT_JAVA_TIMEOUT_MS);
+  const memoryMb = positiveIntegerFromEnv("JAVA_MEMORY_MB", DEFAULT_JAVA_MEMORY_MB);
+  const testExpression = expression.replace(/;\s*$/, "").trim();
+  if (!testExpression) {
+    return {
+      passed: false,
+      expression,
+      error: "The exercise has no test cases.",
+    };
+  }
+
+  const passMarker = `__FL_JAVA_PASS_${randomUUID()}__`;
+  const failMarker = `__FL_JAVA_FAIL_${randomUUID()}__`;
+  const source = buildJavaSource(options.code, testExpression, passMarker, failMarker);
+  const releaseSlot = await acquireJavaSlot();
+  if (!releaseSlot) {
+    return {
+      passed: false,
+      expression,
+      error: "Too many Java exercises are being validated right now. Please try again in a moment.",
+    };
+  }
+  let directory = "";
+
+  try {
+    directory = await fs.mkdtemp(path.join(os.tmpdir(), "java-exercise-"));
+    await fs.writeFile(path.join(directory, JAVA_FILE_NAME), source, "utf8");
+    const env = javaEnvironment(directory);
+
+    const compile = await runProcessWithLimits(
+      resolveJavacBinary(),
+      [
+        `-J-Xmx${memoryMb}m`,
+        "-encoding",
+        "UTF-8",
+        "-d",
+        ".",
+        JAVA_FILE_NAME,
+      ],
+      {
+        cwd: directory,
+        env,
+        timeoutMs: compileTimeout,
+        maxOutputBytes: DEFAULT_JAVA_MAX_OUTPUT_BYTES,
+      },
+    );
+
+    if (compile.spawnError) {
+      return { passed: false, expression, error: javaErrorMessage(compile.spawnError) };
+    }
+    if (compile.timedOut) {
+      return {
+        passed: false,
+        expression,
+        error: `Java compilation timed out after ${compileTimeout} ms.`,
+      };
+    }
+    if (compile.outputLimitExceeded) {
+      return {
+        passed: false,
+        expression,
+        error: "Java compilation produced too much output.",
+      };
+    }
+    if (compile.code !== 0) {
+      const output = [compile.stderr, compile.stdout]
+        .filter((part) => part.trim() !== "")
+        .join("\n")
+        .trim();
+      return {
+        passed: false,
+        expression,
+        error:
+          output || `Java compilation failed with exit code ${compile.code ?? "unknown"}.`,
+      };
+    }
+
+    const result = await runProcessWithLimits(
+      resolveJavaBinary(),
+      [
+        `-Xmx${memoryMb}m`,
+        "-XX:MaxMetaspaceSize=64m",
+        "-XX:+UseSerialGC",
+        "-XX:ActiveProcessorCount=1",
+        `-Djava.io.tmpdir=${directory}`,
+        `-Duser.home=${directory}`,
+        "-Dfile.encoding=UTF-8",
+        "-cp",
+        ".",
+        JAVA_CLASS_NAME,
+      ],
+      {
+        cwd: directory,
+        env,
+        timeoutMs: runTimeout,
+        maxOutputBytes: DEFAULT_JAVA_MAX_OUTPUT_BYTES,
+      },
+    );
+
+    if (result.spawnError) {
+      return { passed: false, expression, error: javaErrorMessage(result.spawnError) };
+    }
+    if (result.timedOut) {
+      return {
+        passed: false,
+        expression,
+        error: `Java execution timed out after ${runTimeout} ms.`,
+      };
+    }
+    if (result.outputLimitExceeded) {
+      return {
+        passed: false,
+        expression,
+        error: "Java produced too much output.",
+      };
+    }
+    if (result.stdout.includes(passMarker)) {
+      return { passed: true, expression, actual: "true" };
+    }
+    if (result.stdout.includes(failMarker)) {
+      return { passed: false, expression, actual: "false" };
+    }
+
+    const output = [result.stderr, result.stdout]
+      .filter((part) => part.trim() !== "")
+      .join("\n")
+      .trim();
+    if (output) {
+      return { passed: false, expression, error: output };
+    }
+    if (result.code !== 0) {
+      return {
+        passed: false,
+        expression,
+        error: `Java execution failed with exit code ${result.code ?? "unknown"}.`,
+      };
+    }
+    return {
+      passed: false,
+      expression,
+      error: "Java did not produce a test result.",
+    };
+  } catch (error) {
+    return { passed: false, expression, error: javaErrorMessage(error) };
+  } finally {
+    if (directory) {
+      await fs.rm(directory, { recursive: true, force: true }).catch(() => undefined);
+    }
+    releaseSlot();
+  }
+}
+
 export async function runProgrammingExercise(
   options: RunProgrammingExerciseOptions,
 ): Promise<ProgrammingValidationResult> {
@@ -855,6 +1153,10 @@ export async function runProgrammingExercise(
 
   if (options.language === "Python") {
     return runPythonExercise(options, expression);
+  }
+
+  if (options.language === "Java") {
+    return runJavaExercise(options, expression);
   }
 
   const functionName = extractFunctionName(options.solution);

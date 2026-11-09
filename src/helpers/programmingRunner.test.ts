@@ -8,8 +8,11 @@ import {
   extractParameterNames,
   formatValue,
   functionSignatureSkeleton,
+  isJavaAvailable,
   isLeanAvailable,
   isPythonAvailable,
+  resolveJavaBinary,
+  resolveJavacBinary,
   resolveLeanBinary,
   resolvePythonBinary,
   runProgrammingExercise,
@@ -171,6 +174,140 @@ function testPythonBinaryResolution(): void {
   } finally {
     if (previous === undefined) delete process.env.PYTHON_BIN;
     else process.env.PYTHON_BIN = previous;
+  }
+}
+
+function testJavaBinaryResolution(): void {
+  const previousJava = process.env.JAVA_BIN;
+  const previousJavac = process.env.JAVAC_BIN;
+  const previousHome = process.env.JAVA_HOME;
+  try {
+    process.env.JAVA_BIN = "/custom/java";
+    process.env.JAVAC_BIN = "/custom/javac";
+    assert.strictEqual(resolveJavaBinary(), "/custom/java");
+    assert.strictEqual(resolveJavacBinary(), "/custom/javac");
+
+    delete process.env.JAVA_BIN;
+    delete process.env.JAVAC_BIN;
+    process.env.JAVA_HOME = "/custom/jdk";
+    assert.strictEqual(
+      resolveJavaBinary(),
+      path.join(
+        "/custom/jdk",
+        "bin",
+        process.platform === "win32" ? "java.exe" : "java",
+      ),
+    );
+    assert.strictEqual(
+      resolveJavacBinary(),
+      path.join(
+        "/custom/jdk",
+        "bin",
+        process.platform === "win32" ? "javac.exe" : "javac",
+      ),
+    );
+
+    delete process.env.JAVA_HOME;
+    assert.strictEqual(resolveJavaBinary(), "java");
+    assert.strictEqual(resolveJavacBinary(), "javac");
+  } finally {
+    if (previousJava === undefined) delete process.env.JAVA_BIN;
+    else process.env.JAVA_BIN = previousJava;
+    if (previousJavac === undefined) delete process.env.JAVAC_BIN;
+    else process.env.JAVAC_BIN = previousJavac;
+    if (previousHome === undefined) delete process.env.JAVA_HOME;
+    else process.env.JAVA_HOME = previousHome;
+  }
+}
+
+async function testJava(): Promise<void> {
+  if (!isJavaAvailable()) {
+    console.log("Java is not installed; skipping Java tests");
+    return;
+  }
+
+  const solution = `static int add(int a, int b) {
+  return a + b;
+}`;
+
+  const passed = await runProgrammingExercise({
+    language: "Java",
+    code: solution,
+    solution,
+    expression: "add(2, 3) == 5 && add(-1, 1) == 0",
+  });
+  assert.strictEqual(passed.passed, true, passed.error ?? "");
+  assert.strictEqual(passed.actual, "true");
+
+  const streams = await runProgrammingExercise({
+    language: "Java",
+    code: `static int sumEven(List<Integer> numbers) {
+  return numbers.stream().filter(n -> n % 2 == 0).mapToInt(Integer::intValue).sum();
+}`,
+    solution,
+    expression: "sumEven(List.of(1, 2, 3, 4)) == 6 && sumEven(List.of()) == 0",
+  });
+  assert.strictEqual(streams.passed, true, streams.error ?? "");
+
+  const failed = await runProgrammingExercise({
+    language: "Java",
+    code: `static int add(int a, int b) {
+  return a - b;
+}`,
+    solution,
+    expression: "add(2, 3) == 5",
+  });
+  assert.strictEqual(failed.passed, false);
+  assert.strictEqual(failed.actual, "false");
+
+  const syntaxError = await runProgrammingExercise({
+    language: "Java",
+    code: "static int add(int a, int b) {",
+    solution,
+    expression: "add(2, 3) == 5",
+  });
+  assert.strictEqual(syntaxError.passed, false);
+  assert.ok(syntaxError.error);
+
+  const runtimeError = await runProgrammingExercise({
+    language: "Java",
+    code: `static int add(int a, int b) {
+  throw new IllegalArgumentException("boom");
+}`,
+    solution,
+    expression: "add(2, 3) == 5",
+  });
+  assert.strictEqual(runtimeError.passed, false);
+  assert.match(runtimeError.error ?? "", /boom/);
+
+  const timeout = await runProgrammingExercise({
+    language: "Java",
+    code: `static boolean spin() {
+  while (true) {}
+}`,
+    solution: "static boolean spin() { return true; }",
+    expression: "spin()",
+    timeoutMs: 200,
+  });
+  assert.strictEqual(timeout.passed, false);
+  assert.match(timeout.error ?? "", /timed out/);
+
+  const previousSecret = process.env.FL_JAVA_SECRET;
+  process.env.FL_JAVA_SECRET = "should-not-be-visible";
+  try {
+    const secretHidden = await runProgrammingExercise({
+      language: "Java",
+      code: `static int add(int a, int b) {
+  if (System.getenv("FL_JAVA_SECRET") != null) return -1;
+  return a + b;
+}`,
+      solution,
+      expression: "add(2, 3) == 5",
+    });
+    assert.strictEqual(secretHidden.passed, true, secretHidden.error ?? "");
+  } finally {
+    if (previousSecret === undefined) delete process.env.FL_JAVA_SECRET;
+    else process.env.FL_JAVA_SECRET = previousSecret;
   }
 }
 
@@ -341,7 +478,9 @@ async function runTests(): Promise<void> {
   await testErrors();
   testLeanBinaryResolution();
   testPythonBinaryResolution();
+  testJavaBinaryResolution();
   await testPython();
+  await testJava();
   await testLean();
   console.log("programming runner tests passed");
 }

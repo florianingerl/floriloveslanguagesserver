@@ -644,7 +644,18 @@ https://api.onlinecompiler.io/api/run-code-sync/ that can be used to compile and
 But Python is also installed on my local machine and I can install it on my remove ubunto VPS production
 server
 Choose whatever option you think is best.
+Add also a topic "Python" and a subtopic "List comprehension" to the programming quiz on my website
+and add a few programming exercises to that subtopic that can be solved elegantly with "List comprehensions"
+	
+96) When I edit a multiple choice exercise, the order of the options should not be random.
+The order of the options should be as in the database where the first option is the correct one
 
+97) When adding a new option to a multiple choice exercise, that new option should become the first (i.e. the correct) one
+
+98) Can you add support for the programming language Java. 
+Add also a topic "Java" and a subtopic "Streams" to the programming quiz on my website
+and add a few programming exercises to that subtopic
+I have Java installed on my local machine (so you can test) and will install it on my VPS Ubunto remote production server
 
 1000)4-Stunden-Lernpaket-Mit-Bonus:   
 4*(30+5) Euro für 4*60min falls du dein Ziel (z.B. Bestehen der Klausur) erreichst und 4*(30-5) Euro, falls du dein Ziel verfehlst
