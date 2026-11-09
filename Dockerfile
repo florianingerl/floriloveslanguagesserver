@@ -12,9 +12,9 @@ RUN npx tsc
 FROM node:22-slim
 WORKDIR /app
 ENV NODE_ENV=production
-# Python und ein JDK fuer die lokale Ausfuehrung von Programmieraufgaben. Der
-# Runner setzt fuer die Kindprozesse harte Grenzen fuer Zeit, Speicher und
-# Ausgabe.
+# Python und ein JDK fuer die lokale Ausfuehrung von Programmieraufgaben.
+# Der Runner setzt fuer die Kindprozesse harte Grenzen fuer Zeit, Speicher und
+# Ausgabe. Racket-Aufgaben laufen ueber die OnlineCompiler.io-API.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 default-jdk-headless \
     && rm -rf /var/lib/apt/lists/*

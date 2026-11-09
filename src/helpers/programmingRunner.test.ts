@@ -3,6 +3,7 @@ import { promises as fs } from "fs";
 import os from "os";
 import path from "path";
 import {
+  buildRacketHarness,
   extractFunctionName,
   extractFunctionSignature,
   extractParameterNames,
@@ -11,10 +12,13 @@ import {
   isJavaAvailable,
   isLeanAvailable,
   isPythonAvailable,
+  isRacketAvailable,
   resolveJavaBinary,
   resolveJavacBinary,
   resolveLeanBinary,
   resolvePythonBinary,
+  resolveRacketApiUrl,
+  resolveRacketCompiler,
   runProgrammingExercise,
 } from "./programmingRunner";
 
@@ -217,6 +221,141 @@ function testJavaBinaryResolution(): void {
     else process.env.JAVAC_BIN = previousJavac;
     if (previousHome === undefined) delete process.env.JAVA_HOME;
     else process.env.JAVA_HOME = previousHome;
+  }
+}
+
+async function testRacketConfiguration(): Promise<void> {
+  const previousKey = process.env.RACKET_API_KEY;
+  const previousKeyFile = process.env.RACKET_LOCAL_KEY_FILE;
+  try {
+    process.env.RACKET_LOCAL_KEY_FILE = path.join(
+      os.tmpdir(),
+      `missing-racket-key-${Date.now()}.json`,
+    );
+    delete process.env.RACKET_API_KEY;
+    assert.strictEqual(isRacketAvailable(), false);
+
+    const notConfigured = await runProgrammingExercise({
+      language: "Racket",
+      code: "(define (double x) (* 2 x))",
+      solution: "(define (double x) (* 2 x))",
+      expression: "(= (double 7) 14)",
+    });
+    assert.strictEqual(notConfigured.passed, false);
+    assert.match(notConfigured.error ?? "", /RACKET_API_KEY/);
+
+    process.env.RACKET_API_KEY = "test-key";
+    assert.strictEqual(isRacketAvailable(), true);
+  } finally {
+    if (previousKey === undefined) delete process.env.RACKET_API_KEY;
+    else process.env.RACKET_API_KEY = previousKey;
+    if (previousKeyFile === undefined) delete process.env.RACKET_LOCAL_KEY_FILE;
+    else process.env.RACKET_LOCAL_KEY_FILE = previousKeyFile;
+  }
+
+  assert.strictEqual(resolveRacketApiUrl(), "https://api.onlinecompiler.io/api/run-code-sync/");
+  assert.strictEqual(resolveRacketCompiler(), "racket-9.3");
+
+  const harness = buildRacketHarness(
+    "(define (double x) (* 2 x))",
+    "(= (double 7) 14)",
+    "PASS_MARKER",
+    "FAIL_MARKER",
+  );
+  assert.ok(harness.startsWith("#lang racket"));
+  assert.ok(harness.includes("(define (double x) (* 2 x))"));
+  assert.ok(harness.includes("(displayln \"PASS_MARKER\")"));
+  assert.ok(harness.includes("(displayln \"FAIL_MARKER\")"));
+}
+
+async function testRacket(): Promise<void> {
+  if (!isRacketAvailable()) {
+    console.log("RACKET_API_KEY is not set; skipping Racket API tests");
+    return;
+  }
+
+  const doubleSolution = `(define (double x)
+  (* 2 x))`;
+
+  const passed = await runProgrammingExercise({
+    language: "Racket",
+    code: doubleSolution,
+    solution: doubleSolution,
+    expression: "(and (= (double 7) 14) (= (double 0) 0) (= (double -3) -6))",
+  });
+  assert.strictEqual(passed.passed, true, passed.error ?? "");
+  assert.strictEqual(passed.actual, "true");
+
+  const factorial = await runProgrammingExercise({
+    language: "Racket",
+    code: `(define (factorial n)
+  (if (= n 0)
+      1
+      (* n (factorial (- n 1)))))`,
+    solution: doubleSolution,
+    expression: "(and (= (factorial 0) 1) (= (factorial 5) 120))",
+  });
+  assert.strictEqual(factorial.passed, true, factorial.error ?? "");
+
+  const sumList = await runProgrammingExercise({
+    language: "Racket",
+    code: "(define (sum-list numbers)\n  (foldl + 0 numbers))",
+    solution: doubleSolution,
+    expression: "(and (= (sum-list (list 1 2 3 4)) 10) (= (sum-list empty) 0))",
+  });
+  assert.strictEqual(sumList.passed, true, sumList.error ?? "");
+
+  const failed = await runProgrammingExercise({
+    language: "Racket",
+    code: "(define (double x)\n  (+ x 1))",
+    solution: doubleSolution,
+    expression: "(= (double 7) 14)",
+  });
+  assert.strictEqual(failed.passed, false);
+  assert.strictEqual(failed.actual, "false");
+
+  const syntaxError = await runProgrammingExercise({
+    language: "Racket",
+    code: "(define (double x)",
+    solution: doubleSolution,
+    expression: "(= (double 7) 14)",
+  });
+  assert.strictEqual(syntaxError.passed, false);
+  assert.ok(syntaxError.error);
+
+  const runtimeError = await runProgrammingExercise({
+    language: "Racket",
+    code: '(define (double x)\n  (error "boom"))',
+    solution: doubleSolution,
+    expression: "(= (double 7) 14)",
+  });
+  assert.strictEqual(runtimeError.passed, false);
+  assert.match(runtimeError.error ?? "", /boom/);
+
+  const timeout = await runProgrammingExercise({
+    language: "Racket",
+    code: "(define (spin)\n  (let loop () (loop)))",
+    solution: doubleSolution,
+    expression: "(spin)",
+    timeoutMs: 1000,
+  });
+  assert.strictEqual(timeout.passed, false);
+  assert.match(timeout.error ?? "", /timed out/);
+
+  const previousSecret = process.env.FL_RACKET_SECRET;
+  process.env.FL_RACKET_SECRET = "should-not-be-visible";
+  try {
+    const secretHidden = await runProgrammingExercise({
+      language: "Racket",
+      code: `(define (double x)
+  (if (getenv "FL_RACKET_SECRET") -1 (* 2 x)))`,
+      solution: doubleSolution,
+      expression: "(= (double 7) 14)",
+    });
+    assert.strictEqual(secretHidden.passed, true, secretHidden.error ?? "");
+  } finally {
+    if (previousSecret === undefined) delete process.env.FL_RACKET_SECRET;
+    else process.env.FL_RACKET_SECRET = previousSecret;
   }
 }
 
@@ -479,8 +618,10 @@ async function runTests(): Promise<void> {
   testLeanBinaryResolution();
   testPythonBinaryResolution();
   testJavaBinaryResolution();
+  await testRacketConfiguration();
   await testPython();
   await testJava();
+  await testRacket();
   await testLean();
   console.log("programming runner tests passed");
 }

@@ -656,6 +656,11 @@ The order of the options should be as in the database where the first option is 
 Add also a topic "Java" and a subtopic "Streams" to the programming quiz on my website
 and add a few programming exercises to that subtopic
 I have Java installed on my local machine (so you can test) and will install it on my VPS Ubunto remote production server
+	
+99) Can you add support for the racket programming language
+Add also a topic "Racket" and a subtopic "Functions" to the programming quiz on my website
+and add a few programming exercises to that subtopic
+I have Racket installed on my local machine (so you can test) and will install it on my VPS Ubuntu remote production server
 
 1000)4-Stunden-Lernpaket-Mit-Bonus:   
 4*(30+5) Euro für 4*60min falls du dein Ziel (z.B. Bestehen der Klausur) erreichst und 4*(30-5) Euro, falls du dein Ziel verfehlst

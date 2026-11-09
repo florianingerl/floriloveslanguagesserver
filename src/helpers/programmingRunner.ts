@@ -1,8 +1,9 @@
 import vm from "vm";
 import ts from "typescript";
+import axios from "axios";
 import { execFile, execFileSync, spawn, type ChildProcess } from "child_process";
 import { randomUUID } from "crypto";
-import { promises as fs } from "fs";
+import { readFileSync, promises as fs } from "fs";
 import os from "os";
 import path from "path";
 
@@ -51,11 +52,19 @@ const JAVA_FILE_NAME = "Main.java";
 const JAVA_CLASS_NAME = "Main";
 const JAVA_MAX_CONCURRENT = positiveIntegerFromEnv("JAVA_MAX_CONCURRENT", 1);
 const JAVA_MAX_QUEUE = positiveIntegerFromEnv("JAVA_MAX_QUEUE", 10);
+const DEFAULT_RACKET_TIMEOUT_MS = 10000;
+const DEFAULT_RACKET_API_URL =
+  "https://api.onlinecompiler.io/api/run-code-sync/";
+const DEFAULT_RACKET_COMPILER = "racket-9.3";
+const RACKET_MAX_CONCURRENT = positiveIntegerFromEnv("RACKET_MAX_CONCURRENT", 1);
+const RACKET_MAX_QUEUE = positiveIntegerFromEnv("RACKET_MAX_QUEUE", 10);
 
 let activePythonRuns = 0;
 const pythonQueue: Array<() => void> = [];
 let activeJavaRuns = 0;
 const javaQueue: Array<() => void> = [];
+let activeRacketRuns = 0;
+const racketQueue: Array<() => void> = [];
 
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -135,6 +144,40 @@ export function isJavaAvailable(): boolean {
   }
 }
 
+// Racket exercises run through the OnlineCompiler.io API. The key is read from
+// the service environment and never sent to the browser. A local, gitignored
+// key file is used as a fallback so development setups need no extra config.
+export function resolveRacketKeyFile(): string {
+  const explicit = (process.env.RACKET_LOCAL_KEY_FILE ?? "").trim();
+  return explicit || path.resolve("racket-key.local.json");
+}
+
+function racketApiKeyFromFile(): string {
+  try {
+    const raw = readFileSync(resolveRacketKeyFile(), "utf8");
+    const parsed = JSON.parse(raw) as { apiKey?: unknown };
+    return typeof parsed.apiKey === "string" ? parsed.apiKey.trim() : "";
+  } catch {
+    return "";
+  }
+}
+
+export function racketApiKey(): string {
+  return (process.env.RACKET_API_KEY ?? "").trim() || racketApiKeyFromFile();
+}
+
+export function resolveRacketApiUrl(): string {
+  return (process.env.RACKET_API_URL ?? "").trim() || DEFAULT_RACKET_API_URL;
+}
+
+export function resolveRacketCompiler(): string {
+  return (process.env.RACKET_COMPILER ?? "").trim() || DEFAULT_RACKET_COMPILER;
+}
+
+export function isRacketAvailable(): boolean {
+  return racketApiKey() !== "";
+}
+
 function positiveIntegerFromEnv(name: string, fallback: number): number {
   const raw = process.env[name];
   if (!raw) return fallback;
@@ -182,6 +225,28 @@ function acquireJavaSlot(): Promise<(() => void) | null> {
     javaQueue.push(() => {
       activeJavaRuns++;
       resolve(releaseJavaSlot);
+    });
+  });
+}
+
+function releaseRacketSlot(): void {
+  activeRacketRuns = Math.max(0, activeRacketRuns - 1);
+  const next = racketQueue.shift();
+  if (next) next();
+}
+
+function acquireRacketSlot(): Promise<(() => void) | null> {
+  if (activeRacketRuns < RACKET_MAX_CONCURRENT) {
+    activeRacketRuns++;
+    return Promise.resolve(releaseRacketSlot);
+  }
+  if (racketQueue.length >= RACKET_MAX_QUEUE) {
+    return Promise.resolve(null);
+  }
+  return new Promise((resolve) => {
+    racketQueue.push(() => {
+      activeRacketRuns++;
+      resolve(releaseRacketSlot);
     });
   });
 }
@@ -1135,6 +1200,180 @@ async function runJavaExercise(
   }
 }
 
+export function buildRacketHarness(
+  code: string,
+  expression: string,
+  passMarker: string,
+  failMarker: string,
+): string {
+  return `#lang racket
+${code}
+
+(define __fl-result
+  (with-handlers ([exn:fail? (lambda (__fl-error)
+                               (eprintf "~a\\n" (exn-message __fl-error))
+                               (exit 2))])
+    ${expression}))
+
+(if __fl-result
+    (begin (displayln ${JSON.stringify(passMarker)}) (exit 0))
+    (begin (displayln ${JSON.stringify(failMarker)}) (exit 1)))
+`;
+}
+
+interface RacketApiResponse {
+  output: string;
+  error: string;
+  exitCode: number | null;
+}
+
+function racketApiErrorText(data: unknown): string {
+  if (typeof data === "string") return data.trim();
+  if (!data || typeof data !== "object") return "";
+  const record = data as Record<string, unknown>;
+  for (const key of ["error", "message", "detail"]) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim() !== "") {
+      return value.trim();
+    }
+  }
+  return "";
+}
+
+function parseRacketApiResponse(data: unknown): RacketApiResponse {
+  const record =
+    data && typeof data === "object" ? (data as Record<string, unknown>) : {};
+  const exitRaw = record.exit_code ?? record.exitCode;
+  return {
+    output: typeof record.output === "string" ? record.output : "",
+    error: typeof record.error === "string" ? record.error : "",
+    exitCode: typeof exitRaw === "number" ? exitRaw : null,
+  };
+}
+
+function racketTimeLimitSeconds(timeoutMs: number): number {
+  const seconds = timeoutMs / 1000;
+  return Math.min(30, Math.max(0.1, Number(seconds.toFixed(2))));
+}
+
+async function runRacketExercise(
+  options: RunProgrammingExerciseOptions,
+  expression: string,
+): Promise<ProgrammingValidationResult> {
+  const timeout =
+    options.timeoutMs ??
+    positiveIntegerFromEnv("RACKET_TIMEOUT_MS", DEFAULT_RACKET_TIMEOUT_MS);
+  const apiKey = racketApiKey();
+  if (!apiKey) {
+    return {
+      passed: false,
+      expression,
+      error:
+        "Racket validation is not configured. Set RACKET_API_KEY in the service environment.",
+    };
+  }
+
+  const passMarker = `__FL_RACKET_PASS_${randomUUID()}__`;
+  const failMarker = `__FL_RACKET_FAIL_${randomUUID()}__`;
+  const harness = buildRacketHarness(
+    options.code,
+    expression,
+    passMarker,
+    failMarker,
+  );
+  const releaseSlot = await acquireRacketSlot();
+  if (!releaseSlot) {
+    return {
+      passed: false,
+      expression,
+      error: "Too many Racket exercises are being validated right now. Please try again in a moment.",
+    };
+  }
+
+  try {
+    const response = await axios.post(
+      resolveRacketApiUrl(),
+      {
+        compiler: resolveRacketCompiler(),
+        code: harness,
+        time_limit: racketTimeLimitSeconds(timeout),
+      },
+      {
+        headers: {
+          Authorization: apiKey,
+          "Content-Type": "application/json",
+        },
+        timeout: timeout + 10000,
+        validateStatus: () => true,
+      },
+    );
+
+    if (response.status < 200 || response.status >= 300) {
+      const detail = racketApiErrorText(response.data);
+      return {
+        passed: false,
+        expression,
+        error: `Racket validation service returned HTTP ${response.status}${
+          detail ? `: ${detail}` : ""
+        }.`,
+      };
+    }
+
+    const result = parseRacketApiResponse(response.data);
+    if (result.output.includes(passMarker)) {
+      return { passed: true, expression, actual: "true" };
+    }
+    if (result.output.includes(failMarker)) {
+      return { passed: false, expression, actual: "false" };
+    }
+    if (result.exitCode === 124) {
+      return {
+        passed: false,
+        expression,
+        error: `Racket execution timed out after ${timeout} ms.`,
+      };
+    }
+
+    const output = [result.error, result.output]
+      .filter((part) => part.trim() !== "")
+      .join("\n")
+      .trim();
+    if (output) {
+      return { passed: false, expression, error: output };
+    }
+    if (result.exitCode !== null && result.exitCode !== 0) {
+      return {
+        passed: false,
+        expression,
+        error: `Racket execution failed with exit code ${result.exitCode}.`,
+      };
+    }
+    return {
+      passed: false,
+      expression,
+      error: "Racket did not produce a test result.",
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
+        return {
+          passed: false,
+          expression,
+          error: `Racket validation timed out after ${timeout} ms.`,
+        };
+      }
+      return {
+        passed: false,
+        expression,
+        error: `Racket validation service is unavailable: ${errorMessage(error)}`,
+      };
+    }
+    return { passed: false, expression, error: errorMessage(error) };
+  } finally {
+    releaseSlot();
+  }
+}
+
 export async function runProgrammingExercise(
   options: RunProgrammingExerciseOptions,
 ): Promise<ProgrammingValidationResult> {
@@ -1157,6 +1396,10 @@ export async function runProgrammingExercise(
 
   if (options.language === "Java") {
     return runJavaExercise(options, expression);
+  }
+
+  if (options.language === "Racket") {
+    return runRacketExercise(options, expression);
   }
 
   const functionName = extractFunctionName(options.solution);

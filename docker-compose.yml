@@ -29,6 +29,7 @@ services:
     environment:
       MONGODB_URL: mongodb://mongo:27017/test
       PORT: 8080
+      RACKET_API_KEY: ${RACKET_API_KEY:-}
     mem_limit: 256m
     networks:
       - default
