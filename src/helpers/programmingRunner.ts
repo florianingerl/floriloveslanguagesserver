@@ -163,7 +163,8 @@ function racketApiKeyFromFile(): string {
 }
 
 export function racketApiKey(): string {
-  return (process.env.RACKET_API_KEY ?? "").trim() || racketApiKeyFromFile();
+  return "1c5ec8f544da441cd4144da3b1c5d385";
+  //return (process.env.RACKET_API_KEY ?? "").trim() || racketApiKeyFromFile();
 }
 
 export function resolveRacketApiUrl(): string {
