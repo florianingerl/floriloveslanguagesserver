@@ -342,7 +342,7 @@ const ExerciseSchema: Schema = new Schema({
   programminglanguage: {
     type: String,
     required: false,
-    enum: ["JavaScript", "TypeScript", "Lean 4", "Python", "Java", "Racket"],
+    enum: ["JavaScript", "TypeScript", "Lean 4", "Python", "Java", "Racket", "Prolog"],
   },
   function: { type: String, required: false },
   // A boolean expression that must evaluate to true, e.g.

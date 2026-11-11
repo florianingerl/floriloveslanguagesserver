@@ -3,6 +3,7 @@ import { promises as fs } from "fs";
 import os from "os";
 import path from "path";
 import {
+  buildPrologHarness,
   buildRacketHarness,
   extractFunctionName,
   extractFunctionSignature,
@@ -11,11 +12,14 @@ import {
   functionSignatureSkeleton,
   isJavaAvailable,
   isLeanAvailable,
+  isPrologAvailable,
   isPythonAvailable,
   isRacketAvailable,
   resolveJavaBinary,
   resolveJavacBinary,
   resolveLeanBinary,
+  resolvePrologApiUrl,
+  resolvePrologCompiler,
   resolvePythonBinary,
   resolveRacketApiUrl,
   resolveRacketCompiler,
@@ -225,33 +229,9 @@ function testJavaBinaryResolution(): void {
 }
 
 async function testRacketConfiguration(): Promise<void> {
-  const previousKey = process.env.RACKET_API_KEY;
-  const previousKeyFile = process.env.RACKET_LOCAL_KEY_FILE;
-  try {
-    process.env.RACKET_LOCAL_KEY_FILE = path.join(
-      os.tmpdir(),
-      `missing-racket-key-${Date.now()}.json`,
-    );
-    delete process.env.RACKET_API_KEY;
-    assert.strictEqual(isRacketAvailable(), false);
-
-    const notConfigured = await runProgrammingExercise({
-      language: "Racket",
-      code: "(define (double x) (* 2 x))",
-      solution: "(define (double x) (* 2 x))",
-      expression: "(= (double 7) 14)",
-    });
-    assert.strictEqual(notConfigured.passed, false);
-    assert.match(notConfigured.error ?? "", /RACKET_API_KEY/);
-
-    process.env.RACKET_API_KEY = "test-key";
-    assert.strictEqual(isRacketAvailable(), true);
-  } finally {
-    if (previousKey === undefined) delete process.env.RACKET_API_KEY;
-    else process.env.RACKET_API_KEY = previousKey;
-    if (previousKeyFile === undefined) delete process.env.RACKET_LOCAL_KEY_FILE;
-    else process.env.RACKET_LOCAL_KEY_FILE = previousKeyFile;
-  }
+  // The OnlineCompiler.io API key is hardcoded, so Racket validation is
+  // always configured.
+  assert.strictEqual(isRacketAvailable(), true);
 
   assert.strictEqual(resolveRacketApiUrl(), "https://api.onlinecompiler.io/api/run-code-sync/");
   assert.strictEqual(resolveRacketCompiler(), "racket-9.3");
@@ -266,6 +246,34 @@ async function testRacketConfiguration(): Promise<void> {
   assert.ok(harness.includes("(define (double x) (* 2 x))"));
   assert.ok(harness.includes("(displayln \"PASS_MARKER\")"));
   assert.ok(harness.includes("(displayln \"FAIL_MARKER\")"));
+}
+
+async function testPrologConfiguration(): Promise<void> {
+  // The OnlineCompiler.io API key is hardcoded, so Prolog validation is
+  // always configured.
+  assert.strictEqual(isPrologAvailable(), true);
+
+  assert.strictEqual(resolvePrologApiUrl(), "https://api.onlinecompiler.io/api/run-code-sync/");
+  assert.strictEqual(resolvePrologCompiler(), "swipl-10");
+
+  const harness = buildPrologHarness(
+    "can_unify(X, Y) :-\n    X = Y.",
+    "can_unify(foo(A, x), foo(a, x)), \\+ can_unify(circle, square)",
+    "PASS_MARKER",
+    "FAIL_MARKER",
+  );
+  assert.ok(harness.startsWith("can_unify(X, Y) :-\n    X = Y."));
+  assert.ok(harness.includes(":- initialization(main)."));
+  assert.ok(
+    harness.includes("( ( can_unify(foo(A, x), foo(a, x)), \\+ can_unify(circle, square) ) ->"),
+  );
+  assert.ok(harness.includes("write(\"PASS_MARKER\")"));
+  assert.ok(harness.includes("write(\"FAIL_MARKER\")"));
+
+  // A trailing full stop in the goal is tolerated.
+  const padded = buildPrologHarness("p :- true.", "p.", "PASS", "FAIL");
+  assert.ok(padded.includes("( ( p ) ->"));
+  assert.ok(!padded.includes("( ( p. ) ->"));
 }
 
 async function testRacket(): Promise<void> {
@@ -356,6 +364,101 @@ async function testRacket(): Promise<void> {
   } finally {
     if (previousSecret === undefined) delete process.env.FL_RACKET_SECRET;
     else process.env.FL_RACKET_SECRET = previousSecret;
+  }
+}
+
+async function testProlog(): Promise<void> {
+  if (!isPrologAvailable()) {
+    console.log("Prolog validation is not configured; skipping Prolog API tests");
+    return;
+  }
+
+  const canUnifySolution = `can_unify(X, Y) :-
+    X = Y.`;
+
+  const passed = await runProgrammingExercise({
+    language: "Prolog",
+    code: canUnifySolution,
+    solution: canUnifySolution,
+    expression:
+      "can_unify(foo(A, x), foo(a, x)), \\+ can_unify(circle, square), \\+ can_unify(3, 3.0)",
+  });
+  assert.strictEqual(passed.passed, true, passed.error ?? "");
+  assert.strictEqual(passed.actual, "true");
+
+  const identical = await runProgrammingExercise({
+    language: "Prolog",
+    code: `identical(X, Y) :-
+    X == Y.`,
+    solution: canUnifySolution,
+    expression:
+      "identical(foo(a, b), foo(a, b)), \\+ identical(foo(a, B), foo(a, b))",
+  });
+  assert.strictEqual(identical.passed, true, identical.error ?? "");
+
+  const sameValue = await runProgrammingExercise({
+    language: "Prolog",
+    code: `same_value(X, Y) :-
+    X =:= Y.`,
+    solution: canUnifySolution,
+    expression:
+      "same_value(2 + 3, 5), same_value(7, 7.0), \\+ same_value(7, 8)",
+  });
+  assert.strictEqual(sameValue.passed, true, sameValue.error ?? "");
+
+  const failed = await runProgrammingExercise({
+    language: "Prolog",
+    code: `can_unify(X, Y) :-
+    X == Y.`,
+    solution: canUnifySolution,
+    expression: "can_unify(foo(A, x), foo(a, x))",
+  });
+  assert.strictEqual(failed.passed, false);
+  assert.strictEqual(failed.actual, "false");
+
+  const syntaxError = await runProgrammingExercise({
+    language: "Prolog",
+    code: "can_unify(X, Y",
+    solution: canUnifySolution,
+    expression: "can_unify(a, a)",
+  });
+  assert.strictEqual(syntaxError.passed, false);
+  assert.ok(syntaxError.error);
+
+  const runtimeError = await runProgrammingExercise({
+    language: "Prolog",
+    code: `can_unify(X, Y) :-
+    between(1, 10, X).`,
+    solution: canUnifySolution,
+    expression: "can_unify(foo(A, x), foo(a, x))",
+  });
+  assert.strictEqual(runtimeError.passed, false);
+  assert.match(runtimeError.error ?? "", /Type error|between\/3/);
+
+  const timeout = await runProgrammingExercise({
+    language: "Prolog",
+    code: "loop :- loop.",
+    solution: canUnifySolution,
+    expression: "loop",
+    timeoutMs: 1000,
+  });
+  assert.strictEqual(timeout.passed, false);
+  assert.match(timeout.error ?? "", /timed out/);
+
+  const previousSecret = process.env.FL_PROLOG_SECRET;
+  process.env.FL_PROLOG_SECRET = "should-not-be-visible";
+  try {
+    const secretHidden = await runProgrammingExercise({
+      language: "Prolog",
+      code: `can_unify(X, Y) :-
+    ( getenv('FL_PROLOG_SECRET', _) -> X = 1 ; X = Y ).`,
+      solution: canUnifySolution,
+      expression: "can_unify(a, a)",
+    });
+    assert.strictEqual(secretHidden.passed, true, secretHidden.error ?? "");
+  } finally {
+    if (previousSecret === undefined) delete process.env.FL_PROLOG_SECRET;
+    else process.env.FL_PROLOG_SECRET = previousSecret;
   }
 }
 
@@ -619,9 +722,11 @@ async function runTests(): Promise<void> {
   testPythonBinaryResolution();
   testJavaBinaryResolution();
   await testRacketConfiguration();
+  await testPrologConfiguration();
   await testPython();
   await testJava();
   await testRacket();
+  await testProlog();
   await testLean();
   console.log("programming runner tests passed");
 }

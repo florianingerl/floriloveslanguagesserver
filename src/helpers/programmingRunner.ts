@@ -26,7 +26,8 @@ export interface RunProgrammingExerciseOptions {
   // The stored solution/signature of the exercise. It determines the function
   // name that must exist in the submitted code.
   solution: string;
-  // The boolean expression entered by the exercise author.
+  // The boolean expression entered by the exercise author. For Prolog it is
+  // a goal that must succeed instead.
   expression: string;
   timeoutMs?: number;
 }
@@ -53,11 +54,15 @@ const JAVA_CLASS_NAME = "Main";
 const JAVA_MAX_CONCURRENT = positiveIntegerFromEnv("JAVA_MAX_CONCURRENT", 1);
 const JAVA_MAX_QUEUE = positiveIntegerFromEnv("JAVA_MAX_QUEUE", 10);
 const DEFAULT_RACKET_TIMEOUT_MS = 10000;
-const DEFAULT_RACKET_API_URL =
+const DEFAULT_ONLINE_COMPILER_API_URL =
   "https://api.onlinecompiler.io/api/run-code-sync/";
 const DEFAULT_RACKET_COMPILER = "racket-9.3";
 const RACKET_MAX_CONCURRENT = positiveIntegerFromEnv("RACKET_MAX_CONCURRENT", 1);
 const RACKET_MAX_QUEUE = positiveIntegerFromEnv("RACKET_MAX_QUEUE", 10);
+const DEFAULT_PROLOG_TIMEOUT_MS = 10000;
+const DEFAULT_PROLOG_COMPILER = "swipl-10";
+const PROLOG_MAX_CONCURRENT = positiveIntegerFromEnv("PROLOG_MAX_CONCURRENT", 1);
+const PROLOG_MAX_QUEUE = positiveIntegerFromEnv("PROLOG_MAX_QUEUE", 10);
 
 let activePythonRuns = 0;
 const pythonQueue: Array<() => void> = [];
@@ -65,6 +70,8 @@ let activeJavaRuns = 0;
 const javaQueue: Array<() => void> = [];
 let activeRacketRuns = 0;
 const racketQueue: Array<() => void> = [];
+let activePrologRuns = 0;
+const prologQueue: Array<() => void> = [];
 
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -144,9 +151,10 @@ export function isJavaAvailable(): boolean {
   }
 }
 
-// Racket exercises run through the OnlineCompiler.io API. The key is read from
-// the service environment and never sent to the browser. A local, gitignored
-// key file is used as a fallback so development setups need no extra config.
+// Racket and Prolog exercises run through the OnlineCompiler.io API. The key
+// is hardcoded per the owner's instruction and never sent to the browser. A
+// local, gitignored key file is kept as a commented-out fallback so
+// development setups could use extra config.
 export function resolveRacketKeyFile(): string {
   const explicit = (process.env.RACKET_LOCAL_KEY_FILE ?? "").trim();
   return explicit || path.resolve("racket-key.local.json");
@@ -162,13 +170,24 @@ function racketApiKeyFromFile(): string {
   }
 }
 
-export function racketApiKey(): string {
+// The OnlineCompiler.io API key works for every language the service offers
+// (Racket, Prolog, ...). It stays hardcoded in the code.
+export function onlineCompilerApiKey(): string {
   return "1c5ec8f544da441cd4144da3b1c5d385";
+}
+
+export function racketApiKey(): string {
+  return onlineCompilerApiKey();
   //return (process.env.RACKET_API_KEY ?? "").trim() || racketApiKeyFromFile();
 }
 
+export function prologApiKey(): string {
+  return onlineCompilerApiKey();
+  //return (process.env.PROLOG_API_KEY ?? "").trim();
+}
+
 export function resolveRacketApiUrl(): string {
-  return (process.env.RACKET_API_URL ?? "").trim() || DEFAULT_RACKET_API_URL;
+  return (process.env.RACKET_API_URL ?? "").trim() || DEFAULT_ONLINE_COMPILER_API_URL;
 }
 
 export function resolveRacketCompiler(): string {
@@ -177,6 +196,18 @@ export function resolveRacketCompiler(): string {
 
 export function isRacketAvailable(): boolean {
   return racketApiKey() !== "";
+}
+
+export function resolvePrologApiUrl(): string {
+  return (process.env.PROLOG_API_URL ?? "").trim() || DEFAULT_ONLINE_COMPILER_API_URL;
+}
+
+export function resolvePrologCompiler(): string {
+  return (process.env.PROLOG_COMPILER ?? "").trim() || DEFAULT_PROLOG_COMPILER;
+}
+
+export function isPrologAvailable(): boolean {
+  return prologApiKey() !== "";
 }
 
 function positiveIntegerFromEnv(name: string, fallback: number): number {
@@ -248,6 +279,28 @@ function acquireRacketSlot(): Promise<(() => void) | null> {
     racketQueue.push(() => {
       activeRacketRuns++;
       resolve(releaseRacketSlot);
+    });
+  });
+}
+
+function releasePrologSlot(): void {
+  activePrologRuns = Math.max(0, activePrologRuns - 1);
+  const next = prologQueue.shift();
+  if (next) next();
+}
+
+function acquirePrologSlot(): Promise<(() => void) | null> {
+  if (activePrologRuns < PROLOG_MAX_CONCURRENT) {
+    activePrologRuns++;
+    return Promise.resolve(releasePrologSlot);
+  }
+  if (prologQueue.length >= PROLOG_MAX_QUEUE) {
+    return Promise.resolve(null);
+  }
+  return new Promise((resolve) => {
+    prologQueue.push(() => {
+      activePrologRuns++;
+      resolve(releasePrologSlot);
     });
   });
 }
@@ -1222,13 +1275,13 @@ ${code}
 `;
 }
 
-interface RacketApiResponse {
+interface OnlineCompilerResponse {
   output: string;
   error: string;
   exitCode: number | null;
 }
 
-function racketApiErrorText(data: unknown): string {
+function onlineCompilerErrorText(data: unknown): string {
   if (typeof data === "string") return data.trim();
   if (!data || typeof data !== "object") return "";
   const record = data as Record<string, unknown>;
@@ -1241,7 +1294,7 @@ function racketApiErrorText(data: unknown): string {
   return "";
 }
 
-function parseRacketApiResponse(data: unknown): RacketApiResponse {
+function parseOnlineCompilerResponse(data: unknown): OnlineCompilerResponse {
   const record =
     data && typeof data === "object" ? (data as Record<string, unknown>) : {};
   const exitRaw = record.exit_code ?? record.exitCode;
@@ -1252,7 +1305,7 @@ function parseRacketApiResponse(data: unknown): RacketApiResponse {
   };
 }
 
-function racketTimeLimitSeconds(timeoutMs: number): number {
+function onlineCompilerTimeLimitSeconds(timeoutMs: number): number {
   const seconds = timeoutMs / 1000;
   return Math.min(30, Math.max(0.1, Number(seconds.toFixed(2))));
 }
@@ -1297,7 +1350,7 @@ async function runRacketExercise(
       {
         compiler: resolveRacketCompiler(),
         code: harness,
-        time_limit: racketTimeLimitSeconds(timeout),
+        time_limit: onlineCompilerTimeLimitSeconds(timeout),
       },
       {
         headers: {
@@ -1310,7 +1363,7 @@ async function runRacketExercise(
     );
 
     if (response.status < 200 || response.status >= 300) {
-      const detail = racketApiErrorText(response.data);
+      const detail = onlineCompilerErrorText(response.data);
       return {
         passed: false,
         expression,
@@ -1320,7 +1373,7 @@ async function runRacketExercise(
       };
     }
 
-    const result = parseRacketApiResponse(response.data);
+    const result = parseOnlineCompilerResponse(response.data);
     if (result.output.includes(passMarker)) {
       return { passed: true, expression, actual: "true" };
     }
@@ -1375,6 +1428,161 @@ async function runRacketExercise(
   }
 }
 
+// The student code followed by a main/0 that evaluates the goal: the goal
+// succeeds -> pass marker and halt(0); the goal fails -> fail marker and
+// halt(1); a runtime error prints its message to stderr and halts with 2.
+// OnlineCompiler.io runs the file with "swipl --on-error=status -q -t
+// runcode_halt", so an initialization goal that halts decides the run.
+export function buildPrologHarness(
+  code: string,
+  goal: string,
+  passMarker: string,
+  failMarker: string,
+): string {
+  // Authors may end the goal with a full stop; the harness adds its own
+  // punctuation around the goal, so trailing full stops are dropped.
+  const cleanedGoal = goal.trim().replace(/\.+\s*$/, "").trim();
+  return `${code}
+
+:- initialization(main).
+
+main :-
+    catch(
+        ( ( ${cleanedGoal} ) ->
+            write(${JSON.stringify(passMarker)}), nl, halt(0)
+        ;   write(${JSON.stringify(failMarker)}), nl, halt(1)
+        ),
+        Error,
+        (   ( message_to_string(Error, Message)
+            ->  true
+            ;   with_output_to(string(Message), write_term(Error, [quoted(true)]))
+            ),
+            write(user_error, Message),
+            nl(user_error),
+            halt(2)
+        )
+    ).
+`;
+}
+
+async function runPrologExercise(
+  options: RunProgrammingExerciseOptions,
+  expression: string,
+): Promise<ProgrammingValidationResult> {
+  const timeout =
+    options.timeoutMs ??
+    positiveIntegerFromEnv("PROLOG_TIMEOUT_MS", DEFAULT_PROLOG_TIMEOUT_MS);
+  const apiKey = prologApiKey();
+  if (!apiKey) {
+    return {
+      passed: false,
+      expression,
+      error:
+        "Prolog validation is not configured. Set PROLOG_API_KEY in the service environment.",
+    };
+  }
+
+  const passMarker = `__FL_PROLOG_PASS_${randomUUID()}__`;
+  const failMarker = `__FL_PROLOG_FAIL_${randomUUID()}__`;
+  const harness = buildPrologHarness(
+    options.code,
+    expression,
+    passMarker,
+    failMarker,
+  );
+  const releaseSlot = await acquirePrologSlot();
+  if (!releaseSlot) {
+    return {
+      passed: false,
+      expression,
+      error: "Too many Prolog exercises are being validated right now. Please try again in a moment.",
+    };
+  }
+
+  try {
+    const response = await axios.post(
+      resolvePrologApiUrl(),
+      {
+        compiler: resolvePrologCompiler(),
+        code: harness,
+        time_limit: onlineCompilerTimeLimitSeconds(timeout),
+      },
+      {
+        headers: {
+          Authorization: apiKey,
+          "Content-Type": "application/json",
+        },
+        timeout: timeout + 10000,
+        validateStatus: () => true,
+      },
+    );
+
+    if (response.status < 200 || response.status >= 300) {
+      const detail = onlineCompilerErrorText(response.data);
+      return {
+        passed: false,
+        expression,
+        error: `Prolog validation service returned HTTP ${response.status}${
+          detail ? `: ${detail}` : ""
+        }.`,
+      };
+    }
+
+    const result = parseOnlineCompilerResponse(response.data);
+    if (result.output.includes(passMarker)) {
+      return { passed: true, expression, actual: "true" };
+    }
+    if (result.output.includes(failMarker)) {
+      return { passed: false, expression, actual: "false" };
+    }
+    if (result.exitCode === 124) {
+      return {
+        passed: false,
+        expression,
+        error: `Prolog execution timed out after ${timeout} ms.`,
+      };
+    }
+
+    const output = [result.error, result.output]
+      .filter((part) => part.trim() !== "")
+      .join("\n")
+      .trim();
+    if (output) {
+      return { passed: false, expression, error: output };
+    }
+    if (result.exitCode !== null && result.exitCode !== 0) {
+      return {
+        passed: false,
+        expression,
+        error: `Prolog execution failed with exit code ${result.exitCode}.`,
+      };
+    }
+    return {
+      passed: false,
+      expression,
+      error: "Prolog did not produce a test result.",
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
+        return {
+          passed: false,
+          expression,
+          error: `Prolog validation timed out after ${timeout} ms.`,
+        };
+      }
+      return {
+        passed: false,
+        expression,
+        error: `Prolog validation service is unavailable: ${errorMessage(error)}`,
+      };
+    }
+    return { passed: false, expression, error: errorMessage(error) };
+  } finally {
+    releaseSlot();
+  }
+}
+
 export async function runProgrammingExercise(
   options: RunProgrammingExerciseOptions,
 ): Promise<ProgrammingValidationResult> {
@@ -1401,6 +1609,10 @@ export async function runProgrammingExercise(
 
   if (options.language === "Racket") {
     return runRacketExercise(options, expression);
+  }
+
+  if (options.language === "Prolog") {
+    return runPrologExercise(options, expression);
   }
 
   const functionName = extractFunctionName(options.solution);
