@@ -63,6 +63,10 @@ const DEFAULT_PROLOG_TIMEOUT_MS = 10000;
 const DEFAULT_PROLOG_COMPILER = "swipl-10";
 const PROLOG_MAX_CONCURRENT = positiveIntegerFromEnv("PROLOG_MAX_CONCURRENT", 1);
 const PROLOG_MAX_QUEUE = positiveIntegerFromEnv("PROLOG_MAX_QUEUE", 10);
+const DEFAULT_HASKELL_TIMEOUT_MS = 15000;
+const DEFAULT_HASKELL_COMPILER = "haskell-9.12";
+const HASKELL_MAX_CONCURRENT = positiveIntegerFromEnv("HASKELL_MAX_CONCURRENT", 1);
+const HASKELL_MAX_QUEUE = positiveIntegerFromEnv("HASKELL_MAX_QUEUE", 10);
 
 let activePythonRuns = 0;
 const pythonQueue: Array<() => void> = [];
@@ -72,6 +76,8 @@ let activeRacketRuns = 0;
 const racketQueue: Array<() => void> = [];
 let activePrologRuns = 0;
 const prologQueue: Array<() => void> = [];
+let activeHaskellRuns = 0;
+const haskellQueue: Array<() => void> = [];
 
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -210,6 +216,22 @@ export function isPrologAvailable(): boolean {
   return prologApiKey() !== "";
 }
 
+export function haskellApiKey(): string {
+  return onlineCompilerApiKey();
+}
+
+export function resolveHaskellApiUrl(): string {
+  return (process.env.HASKELL_API_URL ?? "").trim() || DEFAULT_ONLINE_COMPILER_API_URL;
+}
+
+export function resolveHaskellCompiler(): string {
+  return (process.env.HASKELL_COMPILER ?? "").trim() || DEFAULT_HASKELL_COMPILER;
+}
+
+export function isHaskellAvailable(): boolean {
+  return haskellApiKey() !== "";
+}
+
 function positiveIntegerFromEnv(name: string, fallback: number): number {
   const raw = process.env[name];
   if (!raw) return fallback;
@@ -301,6 +323,28 @@ function acquirePrologSlot(): Promise<(() => void) | null> {
     prologQueue.push(() => {
       activePrologRuns++;
       resolve(releasePrologSlot);
+    });
+  });
+}
+
+function releaseHaskellSlot(): void {
+  activeHaskellRuns = Math.max(0, activeHaskellRuns - 1);
+  const next = haskellQueue.shift();
+  if (next) next();
+}
+
+function acquireHaskellSlot(): Promise<(() => void) | null> {
+  if (activeHaskellRuns < HASKELL_MAX_CONCURRENT) {
+    activeHaskellRuns++;
+    return Promise.resolve(releaseHaskellSlot);
+  }
+  if (haskellQueue.length >= HASKELL_MAX_QUEUE) {
+    return Promise.resolve(null);
+  }
+  return new Promise((resolve) => {
+    haskellQueue.push(() => {
+      activeHaskellRuns++;
+      resolve(releaseHaskellSlot);
     });
   });
 }
@@ -1583,6 +1627,142 @@ async function runPrologExercise(
   }
 }
 
+// Haskell exercises run through OnlineCompiler.io (ghc). The harness appends a
+// main that evaluates the boolean test expression and prints pass/fail markers.
+export function buildHaskellHarness(
+  code: string,
+  expression: string,
+  passMarker: string,
+  failMarker: string,
+): string {
+  const cleanedExpression = expression.trim().replace(/;\s*$/, "").trim();
+  return `${code}
+
+main :: IO ()
+main = do
+  let __flResult = (${cleanedExpression}) :: Bool
+  putStrLn (if __flResult then ${JSON.stringify(passMarker)} else ${JSON.stringify(failMarker)})
+`;
+}
+
+async function runHaskellExercise(
+  options: RunProgrammingExerciseOptions,
+  expression: string,
+): Promise<ProgrammingValidationResult> {
+  const timeout =
+    options.timeoutMs ??
+    positiveIntegerFromEnv("HASKELL_TIMEOUT_MS", DEFAULT_HASKELL_TIMEOUT_MS);
+  const apiKey = haskellApiKey();
+  if (!apiKey) {
+    return {
+      passed: false,
+      expression,
+      error:
+        "Haskell validation is not configured. Set HASKELL_API_KEY in the service environment.",
+    };
+  }
+
+  const passMarker = `__FL_HASKELL_PASS_${randomUUID()}__`;
+  const failMarker = `__FL_HASKELL_FAIL_${randomUUID()}__`;
+  const harness = buildHaskellHarness(
+    options.code,
+    expression,
+    passMarker,
+    failMarker,
+  );
+  const releaseSlot = await acquireHaskellSlot();
+  if (!releaseSlot) {
+    return {
+      passed: false,
+      expression,
+      error: "Too many Haskell exercises are being validated right now. Please try again in a moment.",
+    };
+  }
+
+  try {
+    const response = await axios.post(
+      resolveHaskellApiUrl(),
+      {
+        compiler: resolveHaskellCompiler(),
+        code: harness,
+        time_limit: onlineCompilerTimeLimitSeconds(timeout),
+      },
+      {
+        headers: {
+          Authorization: apiKey,
+          "Content-Type": "application/json",
+        },
+        timeout: timeout + 15000,
+        validateStatus: () => true,
+      },
+    );
+
+    if (response.status < 200 || response.status >= 300) {
+      const detail = onlineCompilerErrorText(response.data);
+      return {
+        passed: false,
+        expression,
+        error: `Haskell validation service returned HTTP ${response.status}${
+          detail ? `: ${detail}` : ""
+        }.`,
+      };
+    }
+
+    const result = parseOnlineCompilerResponse(response.data);
+    if (result.output.includes(passMarker)) {
+      return { passed: true, expression, actual: "true" };
+    }
+    if (result.output.includes(failMarker)) {
+      return { passed: false, expression, actual: "false" };
+    }
+    if (result.exitCode === 124) {
+      return {
+        passed: false,
+        expression,
+        error: `Haskell execution timed out after ${timeout} ms.`,
+      };
+    }
+
+    const output = [result.error, result.output]
+      .filter((part) => part.trim() !== "")
+      .join("\n")
+      .trim();
+    if (output) {
+      return { passed: false, expression, error: output };
+    }
+    if (result.exitCode !== null && result.exitCode !== 0) {
+      return {
+        passed: false,
+        expression,
+        error: `Haskell execution failed with exit code ${result.exitCode}.`,
+      };
+    }
+    return {
+      passed: false,
+      expression,
+      error: "Haskell did not produce a test result.",
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
+        return {
+          passed: false,
+          expression,
+          error: `Haskell validation timed out after ${timeout} ms.`,
+        };
+      }
+      return {
+        passed: false,
+        expression,
+        error: `Haskell validation service is unavailable: ${errorMessage(error)}`,
+      };
+    }
+    return { passed: false, expression, error: errorMessage(error) };
+  } finally {
+    releaseSlot();
+  }
+}
+
 export async function runProgrammingExercise(
   options: RunProgrammingExerciseOptions,
 ): Promise<ProgrammingValidationResult> {
@@ -1613,6 +1793,10 @@ export async function runProgrammingExercise(
 
   if (options.language === "Prolog") {
     return runPrologExercise(options, expression);
+  }
+
+  if (options.language === "Haskell") {
+    return runHaskellExercise(options, expression);
   }
 
   const functionName = extractFunctionName(options.solution);

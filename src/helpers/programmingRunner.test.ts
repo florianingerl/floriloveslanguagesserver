@@ -3,6 +3,7 @@ import { promises as fs } from "fs";
 import os from "os";
 import path from "path";
 import {
+  buildHaskellHarness,
   buildPrologHarness,
   buildRacketHarness,
   extractFunctionName,
@@ -10,11 +11,14 @@ import {
   extractParameterNames,
   formatValue,
   functionSignatureSkeleton,
+  isHaskellAvailable,
   isJavaAvailable,
   isLeanAvailable,
   isPrologAvailable,
   isPythonAvailable,
   isRacketAvailable,
+  resolveHaskellApiUrl,
+  resolveHaskellCompiler,
   resolveJavaBinary,
   resolveJavacBinary,
   resolveLeanBinary,
@@ -276,6 +280,23 @@ async function testPrologConfiguration(): Promise<void> {
   assert.ok(!padded.includes("( ( p. ) ->"));
 }
 
+async function testHaskellConfiguration(): Promise<void> {
+  assert.strictEqual(isHaskellAvailable(), true);
+
+  assert.strictEqual(resolveHaskellApiUrl(), "https://api.onlinecompiler.io/api/run-code-sync/");
+  assert.strictEqual(resolveHaskellCompiler(), "haskell-9.12");
+
+  const harness = buildHaskellHarness(
+    "double :: Int -> Int\ndouble x = 2 * x",
+    "double 7 == 14",
+    "PASS_MARKER",
+    "FAIL_MARKER",
+  );
+  assert.ok(harness.includes("double :: Int -> Int"));
+  assert.ok(harness.includes("let __flResult = (double 7 == 14) :: Bool"));
+  assert.ok(harness.includes("putStrLn (if __flResult then \"PASS_MARKER\" else \"FAIL_MARKER\")"));
+}
+
 async function testRacket(): Promise<void> {
   if (!isRacketAvailable()) {
     console.log("RACKET_API_KEY is not set; skipping Racket API tests");
@@ -364,6 +385,95 @@ async function testRacket(): Promise<void> {
   } finally {
     if (previousSecret === undefined) delete process.env.FL_RACKET_SECRET;
     else process.env.FL_RACKET_SECRET = previousSecret;
+  }
+}
+
+async function testHaskell(): Promise<void> {
+  if (!isHaskellAvailable()) {
+    console.log("Haskell validation is not configured; skipping Haskell API tests");
+    return;
+  }
+
+  const doubleSolution = `double :: Int -> Int
+double x = 2 * x`;
+
+  const passed = await runProgrammingExercise({
+    language: "Haskell",
+    code: doubleSolution,
+    solution: doubleSolution,
+    expression: "double 7 == 14 && double 0 == 0 && double (-3) == -6",
+  });
+  assert.strictEqual(passed.passed, true, passed.error ?? "");
+  assert.strictEqual(passed.actual, "true");
+
+  const sumList = await runProgrammingExercise({
+    language: "Haskell",
+    code: `sumList :: [Int] -> Int
+sumList xs = sum xs`,
+    solution: doubleSolution,
+    expression: "sumList [1,2,3,4] == 10 && sumList [] == 0",
+  });
+  assert.strictEqual(sumList.passed, true, sumList.error ?? "");
+
+  const failed = await runProgrammingExercise({
+    language: "Haskell",
+    code: `double :: Int -> Int
+double x = x + 1`,
+    solution: doubleSolution,
+    expression: "double 7 == 14",
+  });
+  assert.strictEqual(failed.passed, false);
+  assert.strictEqual(failed.actual, "false");
+
+  const syntaxError = await runProgrammingExercise({
+    language: "Haskell",
+    code: "double :: Int -> Int\ndouble x =",
+    solution: doubleSolution,
+    expression: "double 7 == 14",
+  });
+  assert.strictEqual(syntaxError.passed, false);
+  assert.ok(syntaxError.error);
+
+  const runtimeError = await runProgrammingExercise({
+    language: "Haskell",
+    code: `double :: Int -> Int
+double x = error "boom"`,
+    solution: doubleSolution,
+    expression: "double 7 == 14",
+  });
+  assert.strictEqual(runtimeError.passed, false);
+  assert.match(runtimeError.error ?? "", /boom/);
+
+  const timeout = await runProgrammingExercise({
+    language: "Haskell",
+    code: `spin :: Int
+spin = spin`,
+    solution: doubleSolution,
+    expression: "spin == 0",
+    timeoutMs: 2000,
+  });
+  assert.strictEqual(timeout.passed, false);
+  assert.match(timeout.error ?? "", /timed out/);
+
+  const previousSecret = process.env.FL_HASKELL_SECRET;
+  process.env.FL_HASKELL_SECRET = "should-not-be-visible";
+  try {
+    const secretHidden = await runProgrammingExercise({
+      language: "Haskell",
+      code: `import System.Environment (lookupEnv)
+import System.IO.Unsafe (unsafePerformIO)
+
+double :: Int -> Int
+double x = case unsafePerformIO (lookupEnv "FL_HASKELL_SECRET") of
+  Nothing -> 2 * x
+  Just _ -> -1`,
+      solution: doubleSolution,
+      expression: "double 7 == 14",
+    });
+    assert.strictEqual(secretHidden.passed, true, secretHidden.error ?? "");
+  } finally {
+    if (previousSecret === undefined) delete process.env.FL_HASKELL_SECRET;
+    else process.env.FL_HASKELL_SECRET = previousSecret;
   }
 }
 
@@ -723,10 +833,12 @@ async function runTests(): Promise<void> {
   testJavaBinaryResolution();
   await testRacketConfiguration();
   await testPrologConfiguration();
+  await testHaskellConfiguration();
   await testPython();
   await testJava();
   await testRacket();
   await testProlog();
+  await testHaskell();
   await testLean();
   console.log("programming runner tests passed");
 }

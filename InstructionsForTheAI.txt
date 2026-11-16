@@ -662,6 +662,48 @@ Add also a topic "Racket" and a subtopic "Functions" to the programming quiz on 
 and add a few programming exercises to that subtopic
 I have Racket installed on my local machine (so you can test) and will install it on my VPS Ubuntu remote production server
 
+100) Can you add support for the Prolog programming language
+Add also a topic "Prolog" and a subtopic "Equality" to the programming quiz on my website
+and add a few programming exercises to that subtopic
+I have SWI Prolog installed on my local machine (so you can test). For production, use the OnlineCompiler.io RESTful api to compile and run code.
+I have already given you me api key and it is also hardcoded (and it should stay that way) in the code
+
+101) 
+There is a programming exercise in the database where you have to write
+a function whose name is splitFirst in TypeScript.
+
+If I write it correctly like this
+
+function splitFirst<T>(items: T[]): { first: T | undefined; rest: T[] } {
+  if(!items){
+return { rest: [] };
+}else {
+   let [x,...xs] = items;
+   return { first: x, rest: xs };
+}
+}
+
+and then click on "Validate", the error message
+is The stored exercise does not contain a function signature.
+
+Like in all the other programming languages supported, there doesn't have to be a function signature.
+There should be just a boolean expression for the test cases and the user should have to write some code.
+If the testcases pass then, the user has solved the exercise correctly, no matter whether he has implemented 
+a function or not (though admitted that in most exercises he will have to write a function).
+
+
+102) 
+Get rid of language of instruction factor:
+
+country factor = Average price for a 60 min private lesson in your subject in your country / average price for a 60 min private lesson in your subject in Germany according to duck.ai 
+
+103) Next to the "Get random image from facile" button, there should be small undo and redo buttons (without text on them, but only nice bootstrap icons).
+These button should revert to the last image or restore the next image
+
+104) Can you please add support for the programming language Haskell. OnlineCompiler.io supports it.
+In the programming quiz on my website, also add a topic "Haskell" and underneath that parent topic a  child topic "Lists" with a short tutorial
+and a few programming exercises.
+
 1000)4-Stunden-Lernpaket-Mit-Bonus:   
 4*(30+5) Euro für 4*60min falls du dein Ziel (z.B. Bestehen der Klausur) erreichst und 4*(30-5) Euro, falls du dein Ziel verfehlst
 Wenn du dein Ziel verfehlst, dann ist das nächste Paket für dich 3 Euro / h teurer, sonst wird es 1 Euro billiger.
