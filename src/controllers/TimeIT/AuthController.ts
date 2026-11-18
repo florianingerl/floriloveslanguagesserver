@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import dbConfig from "../../config/db.config";
 import { User } from "../../models/LanguageLearningModel";
-import { gmailKonfiguriert, sendeMail } from "../../mails/gmail";
+import { mailConfigured, sendMail } from "../../mails/mailer";
 import {
   CODE_GUELTIGKEIT_MS,
   erzeugeVerifizierungscode,
@@ -60,7 +60,7 @@ const AuthController = {
 
       // Ohne Gmail-Konfiguration (lokale Entwicklung) wird die Adresse direkt
       // verifiziert, damit der Registrierungsfluss nicht blockiert ist.
-      const mailKonfiguriert = gmailKonfiguriert();
+      const mailKonfiguriert = mailConfigured();
       const verifizierung = mailKonfiguriert
         ? naechsterVerifizierungscode()
         : null;
@@ -90,7 +90,7 @@ const AuthController = {
             verifizierung.code,
             frontendBestaetigungslink(email),
           );
-          await sendeMail(email, betreff, text);
+          await sendMail(email, betreff, text);
         } catch (mailFehler) {
           console.error(
             "Die Verifizierungs-E-Mail konnte nicht gesendet werden:",
@@ -270,7 +270,7 @@ const AuthController = {
         return;
       }
 
-      if (!gmailKonfiguriert()) {
+      if (!mailConfigured()) {
         res.status(200).json({ message: GENERIC_VERIFIZIERUNGSMELDUNG });
         return;
       }
@@ -286,7 +286,7 @@ const AuthController = {
           verifizierung.code,
           frontendBestaetigungslink(user.email),
         );
-        await sendeMail(user.email, betreff, text);
+        await sendMail(user.email, betreff, text);
       } catch (mailFehler) {
         console.error(
           "Die Verifizierungs-E-Mail konnte nicht gesendet werden:",

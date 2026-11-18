@@ -147,6 +147,9 @@ export interface IUser extends IBaseModel {
   name: string;
   email: string;
   password: string;
+  // Set when the account was created or linked through an OAuth provider.
+  googleId?: string;
+  githubId?: string;
   role: UserRole;
   isAdmin: boolean;
   emailVerified?: boolean;
@@ -358,6 +361,8 @@ const UserSchema: Schema = new Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  googleId: { type: String, required: false },
+  githubId: { type: String, required: false },
   role: { type: String, required: true },
   isAdmin: { type: Boolean, required: true },
   emailVerified: { type: Boolean, required: false },

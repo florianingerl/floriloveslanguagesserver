@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { Response } from "express";
 import { User } from "../../models/LanguageLearningModel";
-import { gmailKonfiguriert, sendeMail } from "../../mails/gmail";
+import { mailConfigured, sendMail } from "../../mails/mailer";
 import {
   CODE_GUELTIGKEIT_MS,
   erzeugeVerifizierungscode,
@@ -131,13 +131,14 @@ export const updateUser = async (
         aktualisierung.emailVerified = false;
         aktualisierung.verificationCodeHash = verifizierung.hash;
         aktualisierung.verificationExpiresAt = verifizierung.ablauf;
-        if (gmailKonfiguriert()) {
+        const mail = verifizierungsEmail(
+          existierenderBenutzer.name,
+          verifizierung.code,
+          frontendBestaetigungslink(neueEmail)
+        );
+        if (mailConfigured()) {
           try {
-            await sendeMail(
-              neueEmail,
-              verifizierungsEmail(existierenderBenutzer.name, verifizierung.code, frontendBestaetigungslink(neueEmail)).text,
-              verifizierungsEmail(existierenderBenutzer.name, verifizierung.code, frontendBestaetigungslink(neueEmail)).betreff
-            );
+            await sendMail(neueEmail, mail.betreff, mail.text);
           } catch {
             // Die E-Mail wird bestmöglich versucht, blockiert aber nicht das Speichern.
           }

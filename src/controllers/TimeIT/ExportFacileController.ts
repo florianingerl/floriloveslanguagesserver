@@ -1,5 +1,10 @@
 import { Request, Response } from "express";
 import axios from "axios";
+import {
+  baueExportFacileBody,
+  ExportFacileBody,
+  ExportUebung,
+} from "../../helpers/exportFacileBody";
 
 // Nur diese *facile.com-Seiten dürfen angesprochen werden. Ohne diese Liste wäre
 // die Route ein offener Weiterleiter, mit dem beliebige Websites erreicht werden.
@@ -30,6 +35,13 @@ interface ExportAnfrage {
   testId?: unknown;
   cookie?: unknown;
   body?: unknown;
+  exercises?: unknown;
+  quiz?: unknown;
+  title?: unknown;
+  author?: unknown;
+  topicTutorial?: unknown;
+  testType?: unknown;
+  baseUrl?: unknown;
 }
 
 function alsText(wert: unknown): string {
@@ -56,11 +68,28 @@ function cookieBereinigen(cookie: string): string {
   return cookie.replace(/[\r\n]/g, "").replace(/;\s*$/, "");
 }
 
+function autorAusCookie(cookie: string): string {
+  const treffer = cookie.match(/(?:^|;\s*)auteur_cookies=([^;]+)/i);
+  return treffer ? treffer[1].trim() : "";
+}
+
 export const exportToFacile = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { site, testId, cookie, body } = (req.body ?? {}) as ExportAnfrage;
+  const {
+    site,
+    testId,
+    cookie,
+    body,
+    exercises,
+    quiz,
+    title,
+    author,
+    topicTutorial,
+    testType,
+    baseUrl,
+  } = (req.body ?? {}) as ExportAnfrage;
 
   const seite = alsText(site).trim().toLowerCase();
   if (!(SEITEN as readonly string[]).includes(seite)) {
@@ -83,11 +112,7 @@ export const exportToFacile = async (
     return;
   }
 
-  const inhalt = alsText(body);
-  if (inhalt === "") {
-    res.status(400).json({ ok: false, message: "Der Inhalt der Anfrage fehlt." });
-    return;
-  }
+  let inhalt = alsText(body);
 
   const sitzung = alsText(cookie).trim();
   if (sitzung === "") {
@@ -108,6 +133,32 @@ export const exportToFacile = async (
         "Im Cookie fehlt \"auteur_cookies\". Das ist auf *facile.com der Cookie, der den Benutzer zuordnet; sessionid, sessionid2 und PHPSESSID allein reichen nicht. Bitte den kompletten Cookie kopieren, zum Beispiel \"auteur_cookies=flori10; sessionid=…\".",
     });
     return;
+  }
+
+  let gebaut: ExportFacileBody | null = null;
+  if (inhalt === "") {
+    try {
+      gebaut = baueExportFacileBody({
+        site: seite,
+        quiz: alsText(quiz),
+        testId: testIdText,
+        title: alsText(title),
+        author: alsText(author) || autorAusCookie(sitzung),
+        topicTutorial: alsText(topicTutorial),
+        testType: alsText(testType),
+        baseUrl: alsText(baseUrl) || undefined,
+        exercises: exercises as ExportUebung[],
+      });
+      inhalt = gebaut.body;
+    } catch (err) {
+      res.status(400).json({
+        ok: false,
+        message: `Die Aufgaben konnten nicht fuer facile aufbereitet werden: ${
+          err instanceof Error ? err.message : "Unbekannter Fehler"
+        }`,
+      });
+      return;
+    }
   }
 
   const ziel = `https://www.${seite}${pfad}`;
@@ -176,6 +227,14 @@ export const exportToFacile = async (
       testId: testIdText,
       gespeichert,
       bytes: html.length,
+      ...(gebaut
+        ? {
+            fragen: gebaut.fragen,
+            mehrfachLuecken: gebaut.mehrfachLuecken,
+            type: gebaut.type,
+            numero: gebaut.numero,
+          }
+        : {}),
     });
   } catch (err) {
     const meldung =

@@ -1,5 +1,6 @@
 import express from "express";
 import { AuthController } from "./src/controllers/TimeIT/AuthController";
+import { OAuthController } from "./src/controllers/TimeIT/OAuthController";
 import { Request, Response } from "express";
 
 import {
@@ -77,6 +78,14 @@ router.post("/api/register", AuthController.register);
 router.post("/api/login", AuthController.login);
 router.post("/api/verifyemail", AuthController.verifyEmail);
 router.post("/api/resendverification", AuthController.resendVerification);
+// Sign in / sign up with Google or GitHub. The start endpoint redirects to the
+// provider; the callback creates or links the user and redirects to the
+// frontend with a JWT.
+router.get("/api/auth/providers", OAuthController.getProviders);
+router.get("/api/auth/google", OAuthController.start("google"));
+router.get("/api/auth/google/callback", OAuthController.callback("google"));
+router.get("/api/auth/github", OAuthController.start("github"));
+router.get("/api/auth/github/callback", OAuthController.callback("github"));
 router.get(
   "/api/auth/user",
   authMiddleware,

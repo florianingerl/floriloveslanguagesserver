@@ -1,0 +1,51 @@
+fetch("https://www.anglaisfacile.com/cgi2/myexam/edit2.php?id=131880", {
+  "headers": {
+    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/jxl,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    "accept-language": "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7,fr;q=0.6,es;q=0.5",
+    "cache-control": "max-age=0",
+    "content-type": "application/x-www-form-urlencoded",
+    "upgrade-insecure-requests": "1",
+    "cookie": "gomobile=d; timeout-messages-flori10=1; __utma=253053657.1061055926.1761312011.1761312011.1761312011.1; auteur_cookies=flori10; maj-flori10=1; sessionid=f82527cc0f2e6d36c29dc2ed9c54121b; sessionid2=3fd4a654e0b309a9ead37dd77a9642b8; url=005; kdi=flori10; __sdgcm=2.g:1:1111111; euconsent-v2=CQr0dEAQr0dEABcAKEDEC0FoAP_gAEPgAAqIK_wOAABQAKAAsACoAGQAOAAgABUAC0AGUANAA1ACLAEwATQAtgBfgDCAMQAcgA8QCDAIQAToApABcADSAHoAQgAiYBHQC6gGEAM6AaAA0QBrwDaAI7AR6Al4BP4ClwF1ALzgYsBi4DGQGSAOTAdQA9IB7QD9wIDgRhAjIBGYCQ4EmgJngV_BX-A4AAsACoAHAAQAAqABlADQANQAigBMADEAH4AQgBCACLAEdALqAaIA14BtAEegLzAYIAxYBkgDkwHtAP3AjMAA.IK_wMIAFAAWABUADIAHAAQAAqABaADKAGgAagBFgCYAJoAWwAvgBhADwAH6AQYBCACdAFIALgAaQA9ACJgEWAI6AYQA0ABogDXgG0AR2Aj0BP4ClwF1ALzgYsBi4DGQGSAOTAe0BAcCMIEZAIzASHAk0BX8.yFe34h4.4U6gDABZASWBEkFBgKEQU6gDUAbAAgACoAMgA0AB8AEIAJoAUABTACsALIAXACeAFGAKYAqABXgC6AMwAagBqABgAQABIEft-AAAAAA; __gads=ID=991f47a266b476d3:T=1776786877:RT=1794914369:S=ALNI_MYKfaSsPMiQMuSmUeea9HCQ25sY4g; __gpi=UID=000013d82e3d227c:T=1776786877:RT=1794914369:S=ALNI_MYWrfvVMq0S3Ke_qkCQ-BcavzZ8YA; __eoi=ID=3f35b33eb49b57e6:T=1790575412:RT=1794914369:S=AA-Afjba8NTnBhtV9TF4azXxDaRP; PHPSESSID=uenond1jh43vtcfttohl3hval3",
+    "Referer": "https://www.anglaisfacile.com/cgi2/myexam/edit2.php?id=131880"
+  },
+  "body": "statut=r&top2=&auteur2=flori10&liaison2=%23adverbe%23conjonction%23&casier=clone+du+test+131877+&anciensite=0001&yenamarre=0001&genre=g&difficulte=2&type=1&titre=Playing+around+a+bit&titreenglish=Playing+around+a+bit&ancientitreenglish=Playing+around+a+bit&numero=3&message_textarea=&confirmer=0&q1=%3Cimg+src%3D%22https%3A%2F%2Fwww.anglaisfacile.com%2Fcgi2%2Fmyexam%2Fimages2%2F90360.jpg%22%3E+Do+sheep+believe+*+man%27s+kindness+%3F+%3Cbr%3E&r1=in&e1=&q2=%3Cimg+src%3D%22https%3A%2F%2Fwww.anglaisfacile.com%2Fcgi2%2Fmyexam%2Fimages2%2F86871.jpg%22%3E+According+to+the+spiritual+teacher+Eckhart+Tolle%2C+when+you+wash+the+dishes%2C+you+should+contencrate+*+that+activity%2C+and+not+already+thinking+about+the+next+moment.&r2=on&e2=&q3=%3Cimg+src%3D%22https%3A%2F%2Fwww.anglaisfacile.com%2Fcgi2%2Fmyexam%2Fimages2%2F53093.jpg%22%3E+In+the+morning%2C+Garfield%27s+mind+is+usually+divided+*+two+halfes.+One+half+wants+to+stay+in+bed+all+day%2C+the+other+half+wants+to+drink+a+coffee.&r3=into&e3=&q4=%3Cimg+src%3D%22https%3A%2F%2Fwww.anglaisfacile.com%2Fcgi2%2Fmyexam%2Fimages2%2F34753.gif%22%3E+The+lawyer+succeeded+*+reducing+the+punishment+of+his+client+to+only+2+years+of+prison.&r4=in&e4=&q5=%3Cimg+src%3D%22https%3A%2F%2Fwww.anglaisfacile.com%2Fcgi2%2Fmyexam%2Fimages2%2F66931.jpg%22%3E+Valentina+always+invites+her+cats+*+sleep+in+her+bed+because+they+are+so+sweet.&r5=to&e5=&q6=%3Cimg+src%3D%22https%3A%2F%2Fwww.anglaisfacile.com%2Fcgi2%2Fmyexam%2Fimages2%2F81755.jpg%22%3E+What+happened+*+Edwin+after+moving+to+France+%3F&r6=to&e6=&q7=%3Cimg+src%3D%22https%3A%2F%2Fwww.anglaisfacile.com%2Fcgi2%2Fmyexam%2Fimages2%2F52621.gif%22%3E+On+the+first+of+January%2C+everyone+is+still+filled+*+good+intentions%2C+but+they+quickly+fade+away+as+the+year+progresses.&r7=with&e7=&q8=%3Cimg+src%3D%22https%3A%2F%2Fwww.anglaisfacile.com%2Fcgi2%2Fmyexam%2Fimages2%2F60754.jpg%22%3E+Don%27t+fill+your+stomach+*+dead+bread+like+this+girl%2C+eat+fresh+buckwheat+sprouts+%21&r8=with&e8=&q9=%3Cimg+src%3D%22https%3A%2F%2Fwww.anglaisfacile.com%2Fcgi2%2Fmyexam%2Fimages2%2F47619.jpg%22%3E+Why+is+Martin+sleeping+so+deeply+tonight+%3F+Because+in+his+dream%2C+he+crashed+his+car+*+a+tree+and+became+unconscious.&r9=into&e9=&q10=%3Cimg+src%3D%22https%3A%2F%2Fwww.anglaisfacile.com%2Fcgi2%2Fmyexam%2Fimages2%2F46848.gif%22%3E+The+comics+of+Asterix+and+Obelix+have+been+translated+from+French+*+many+other+languages.&r10=into&e10=&q11=%3Cimg+src%3D%22https%3A%2F%2Fwww.anglaisfacile.com%2Fcgi2%2Fmyexam%2Fimages2%2F29962.gif%22%3E+Spiderman+prefers+jumping+from+one+roof+to+another+*+simply+walking+on+the+street.&r11=to&e11=&q12=%3Cimg+src%3D%22https%3A%2F%2Fwww.anglaisfacile.com%2Fcgi2%2Fmyexam%2Fimages2%2F97578.jpg%22%3E+Asim+ist+*+intelligent+and&r12=very&e12=&q13=also+has+an+*+wife.+%3Cbr%3E&r13=intelligent&e13=&q14=%3Cimg+src%3D%22https%3A%2F%2Fwww.anglaisfacile.com%2Fcgi2%2Fmyexam%2Fimages2%2F97578.jpg%22%3E+Asim+ist+*+intelligent+and&r14=very&e14=&q15=also+has+an+*+wife.+%3Cbr%3E&r15=intelligent&e15=&mychoice=15&grander=&nol2=&vieuxconfirm=0&forcer2=&enbaspage=&enbas=",
+  "method": "POST"
+});
+
+I want to upload gapText-Exercises with multiple gaps to facile (francaisfacile.com, anglaisfacile.com, etc... )
+Above you see an example.
+
+Suppose the gapText exercise in my database is the following:
+{
+  _id: ObjectId('6afd739106440392f9cc8d2f'),
+  quiz: ObjectId('6acc16b0297ffa5fb03baa7b'),
+  subject: 'english',
+  type: 'gapText',
+  imageUrl: 'https://static.klipy.com/ii/f87f46a2c5aeaeed4c68910815f73eaf/b3/71/IvGpjFm5.jpg',
+  topic: ObjectId('6aae2e0212640278a616d510'),
+  user: ObjectId('6ac13ec8ad4b9e599155b16e'),
+  questionOrInstruction: 'Fill in the gaps !',
+  gapText: 'Asim is {more} intelligent than a duck, in fact, he is the {most} intelligent software developer from Pakistan.',
+  createdAt: ISODate('2026-09-20T06:10:04.829Z'),
+  updatedAt: ISODate('2026-10-10T12:58:42.318Z'),
+  __v: NumberInt('0'),
+  sentences: [],
+  guessedSentences: []
+}
+
+Then it should be uploaded to anglaisfacile like this
+q = <a href="https://static.klipy.com/ii/f87f46a2c5aeaeed4c68910815f73eaf/b3/71/IvGpjFm5.jpg"></a>Asim is * intelligent than a duck, in fact, he is the
+r = more
+
+q = * intelligent software developer from Pakistan. <br>'
+r = most
+
+In addition, the option "Aucun affichage, aucun saute de ligne" must be chosen when uploading this to facile.
+The exercise from my database is split into as many q-r-blocks as there are gaps. At the end of the q-field of the last q-r-block,
+a line break must be inserted with <br> (see example).
+You can seperate q-r-blocks immediately before the next gap (see example).
+
+At the top of the file, you see an example of a post (where option "Aucun affichage, aucun saute de ligne" is chosen).
+
+
+

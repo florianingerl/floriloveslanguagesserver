@@ -33,9 +33,12 @@
     "test:whiteboard": "ts-node src/whiteboard/boardLogic.test.ts",
     "test:threeinarow:smoke": "ts-node scripts/threeinarow-smoke.ts",
     "test:imagelimit": "ts-node src/helpers/imageLimit.test.ts",
+    "test:exportfacilebody": "ts-node src/helpers/exportFacileBody.test.ts",
     "test:ownership": "ts-node src/helpers/ownership.test.ts",
     "test:programming": "ts-node src/helpers/programmingRunner.test.ts",
     "test:verification": "ts-node src/mails/verification.test.ts",
+    "test:mailer": "ts-node src/mails/mailer.test.ts",
+    "test:oauth": "ts-node src/oauth/oauth.test.ts",
     "gmailtoken": "node scripts/get-gmail-token.cjs"
   },
   "keywords": [

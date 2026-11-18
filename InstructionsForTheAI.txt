@@ -704,6 +704,10 @@ These button should revert to the last image or restore the next image
 In the programming quiz on my website, also add a topic "Haskell" and underneath that parent topic a  child topic "Lists" with a short tutorial
 and a few programming exercises.
 
+105) For E-Mail-Verifikation.
+Can you send the new user an e-mail without using my GMAIL ? Can you explain to me the different solutions how this could be 
+achieved and links to tutorials on the web if available
+
 1000)4-Stunden-Lernpaket-Mit-Bonus:   
 4*(30+5) Euro für 4*60min falls du dein Ziel (z.B. Bestehen der Klausur) erreichst und 4*(30-5) Euro, falls du dein Ziel verfehlst
 Wenn du dein Ziel verfehlst, dann ist das nächste Paket für dich 3 Euro / h teurer, sonst wird es 1 Euro billiger.
