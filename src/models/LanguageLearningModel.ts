@@ -119,6 +119,7 @@ export interface IExercise extends IBaseModel {
   subject?: string;
   type: string;
   imageUrl: string;
+  imageJsonUrl?: string;
   topic?: Types.ObjectId;
   // Schule/Hochschule/Klasse der Aufgabe. Die Schule steckt in einem eigenen
   // Dokument (School); die Aufgabe speichert dessen _id.
@@ -180,6 +181,7 @@ export interface IUploadedImage {
   _id: string;
   // Wer das Bild hochgeladen hat.
   user: Types.ObjectId;
+  kind?: "image" | "drawing-json";
   contentType: string;
   data: Buffer;
   createdAt: Date;
@@ -233,6 +235,7 @@ const DictSchema: Schema = new Schema({
 // deshalb sind beide Felder indiziert.
 const UploadedImageSchema: Schema = new Schema({
   user: { type: Types.ObjectId, ref: "User", required: true, index: true },
+  kind: { type: String, enum: ["image", "drawing-json"], default: "image" },
   contentType: { type: String, required: true },
   data: { type: Buffer, required: true },
   createdAt: { type: Date, default: Date.now, index: true },
@@ -322,6 +325,7 @@ const ExerciseSchema: Schema = new Schema({
   subject: { type: String, required: false, index: true },
   type: { type: String, required: true, enum: ["gapText", "multipleChoice", "matching", "wordOrder", "programming"] },
   imageUrl: { type: String, required: true },
+  imageJsonUrl: { type: String, required: false },
   // Ein Absatz kann auch ohne Topic gespeichert werden (z.B. die Aufgabe eines
   // Buch-Quizzes), deshalb ist das Feld nicht mehr verpflichtend.
   topic: { type: Types.ObjectId, required: false },

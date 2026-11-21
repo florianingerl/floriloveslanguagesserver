@@ -66,6 +66,7 @@ import { exportToFacile } from "./src/controllers/TimeIT/ExportFacileController"
 
 import {
   getImage,
+  uploadDrawing,
   uploadImage,
 } from "./src/controllers/TimeIT/ImageController";
 
@@ -173,6 +174,7 @@ router.post("/api/exportfacile", exportToFacile);
 // Bilder aus der Zwischenablage: hochladen (mit Token, mit Tageslimit) und
 // wieder ausliefern (oeffentlich).
 router.post("/api/image", authMiddleware, uploadImage);
+router.post("/api/image/drawing", authMiddleware, uploadDrawing);
 router.get("/api/image/:id([0-9a-fA-F]{24})", getImage);
 
 export default router;

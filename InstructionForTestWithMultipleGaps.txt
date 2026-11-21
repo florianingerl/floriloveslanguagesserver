@@ -45,7 +45,7 @@ The exercise from my database is split into as many q-r-blocks as there are gaps
 a line break must be inserted with <br> (see example).
 You can seperate q-r-blocks immediately before the next gap (see example).
 
-At the top of the file, you see an example of a post (where option "Aucun affichage, aucun saute de ligne" is chosen).
+At the top of the file, you see an example of a post to anglaisfacile.com (where option "Aucun affichage, aucun saute de ligne" is chosen).
 
 
 

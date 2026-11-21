@@ -708,6 +708,19 @@ and a few programming exercises.
 Can you send the new user an e-mail without using my GMAIL ? Can you explain to me the different solutions how this could be 
 achieved and links to tutorials on the web if available
 
+106) It should be possible to draw his own image when creating an exercise
+
+107)Übersetungsaufgaben
+
+108) When creating an exercise, it should be possible for the creator of the exercise to draw an image himself.
+For that, under the "Get random image from facile" button, there should be a button "Draw image yourself". After being clicked the
+OImageChooserAndDisplayer should be replaced by an ImageDrawer .
+The size of the image should be fixed. The background of the image should just be white (with no grid ) Otherwise basically all the
+drawing capabilites of the Whiteboard you already programmed should be present. Below, this picture drawing editor,
+there should be a save and cancel button. The save button should save the picture in the whiteboard ".json"-format and 
+also in a ".png" format to the mongodb database. Cancel should make the editor invisible and restore the previous OImageChooserAndDisplayer
+
+
 1000)4-Stunden-Lernpaket-Mit-Bonus:   
 4*(30+5) Euro für 4*60min falls du dein Ziel (z.B. Bestehen der Klausur) erreichst und 4*(30-5) Euro, falls du dein Ziel verfehlst
 Wenn du dein Ziel verfehlst, dann ist das nächste Paket für dich 3 Euro / h teurer, sonst wird es 1 Euro billiger.

@@ -8,36 +8,11 @@ import {
   MAX_UPLOADS_PRO_TAG,
   tagesBeginn,
 } from "../../helpers/imageLimit";
-
-// Groesse, die ein einzelnes Bild hoechstens haben darf. Bezogen auf die
-// dekodierten Bytes, nicht auf die Base64-Zeichenkette.
-const MAX_BILD_BYTES = 8 * 1024 * 1024;
-
-// Erlaubte Bildtypen. Alles andere wird abgelehnt, damit hier kein beliebiger
-// Inhalt unter einem image/-Content-Type gespeichert wird.
-const ERLAUBTE_TYPEN = [
-  "image/png",
-  "image/jpeg",
-  "image/jpg",
-  "image/gif",
-  "image/webp",
-  "image/bmp",
-  "image/svg+xml",
-];
-
-// Liest "data:image/png;base64,...." und gibt Typ und Bytes zurueck.
-function zerlegeDatenUrl(
-  datenUrl: string
-): { contentType: string; data: Buffer } | null {
-  const treffer =
-    /^data:([a-zA-Z0-9.+-]+\/[a-zA-Z0-9.+-]+);base64,([\s\S]*)$/.exec(datenUrl);
-  if (!treffer) return null;
-  const contentType = treffer[1].toLowerCase();
-  if (!ERLAUBTE_TYPEN.includes(contentType)) return null;
-  const data = Buffer.from(treffer[2], "base64");
-  if (data.length === 0) return null;
-  return { contentType, data };
-}
+import {
+  MAX_BILD_BYTES,
+  parseImageDataUrl,
+} from "../../helpers/imageDataUrl";
+import { validateDrawing } from "../../helpers/imageDrawing";
 
 // Baut die absolute URL des gespeicherten Bildes. Wenn PUBLIC_URL gesetzt ist,
 // wird sie benutzt; sonst die Angaben aus der Anfrage (hinter dem Proxy stehen
@@ -72,6 +47,7 @@ export const uploadImage = async (
     const uploadsHeute = await UploadedImage.countDocuments({
       user: new Types.ObjectId(String(benutzerId)),
       createdAt: { $gte: tagesBeginn() },
+      kind: { $ne: "drawing-json" },
     });
 
     if (!darfBildHochladen(email, uploadsHeute)) {
@@ -87,7 +63,7 @@ export const uploadImage = async (
       return;
     }
 
-    const zerlegt = zerlegeDatenUrl(datenUrl);
+    const zerlegt = parseImageDataUrl(datenUrl);
     if (!zerlegt) {
       res.status(400).json({ message: "The pasted data is not a supported image." });
       return;
@@ -113,6 +89,75 @@ export const uploadImage = async (
       id,
       url: `${oeffentlicheBasis(req)}/api/image/${id}`,
       // -1 bedeutet: kein Tageslimit fuer diesen Benutzer.
+      remaining: unbegrenzt ? -1 : Math.max(0, MAX_UPLOADS_PRO_TAG - (uploadsHeute + 1)),
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(400).json({ message: "An unknown error occurred" });
+    }
+  }
+};
+
+export const uploadDrawing = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const benutzerId = req.user?.id;
+    if (!benutzerId || !Types.ObjectId.isValid(String(benutzerId))) {
+      res.status(401).json({ message: "You have to be logged in to upload an image." });
+      return;
+    }
+
+    const benutzer = await User.findById(benutzerId);
+    const email = benutzer?.email;
+
+    const uploadsHeute = await UploadedImage.countDocuments({
+      user: new Types.ObjectId(String(benutzerId)),
+      createdAt: { $gte: tagesBeginn() },
+      kind: { $ne: "drawing-json" },
+    });
+    if (!darfBildHochladen(email, uploadsHeute)) {
+      res.status(429).json({
+        message: `You can upload at most ${MAX_UPLOADS_PRO_TAG} images per day.`,
+      });
+      return;
+    }
+
+    const gueltig = validateDrawing(req.body);
+    if (!gueltig.ok) {
+      res.status(gueltig.status).json({ message: gueltig.message });
+      return;
+    }
+
+    const user = new Types.ObjectId(String(benutzerId));
+    const png = await UploadedImage.create({
+      user,
+      kind: "image",
+      contentType: gueltig.value.contentType,
+      data: gueltig.value.data,
+    });
+    let jsonBild;
+    try {
+      jsonBild = await UploadedImage.create({
+        user,
+        kind: "drawing-json",
+        contentType: "application/json",
+        data: Buffer.from(gueltig.value.json, "utf8"),
+      });
+    } catch (error) {
+      await UploadedImage.deleteOne({ _id: png._id }).catch(() => undefined);
+      throw error;
+    }
+
+    const basis = oeffentlicheBasis(req);
+    const unbegrenzt = hatUnbegrenztesLimit(email);
+    res.status(201).json({
+      id: String(png._id),
+      url: `${basis}/api/image/${String(png._id)}`,
+      jsonUrl: `${basis}/api/image/${String(jsonBild._id)}`,
       remaining: unbegrenzt ? -1 : Math.max(0, MAX_UPLOADS_PRO_TAG - (uploadsHeute + 1)),
     });
   } catch (error) {

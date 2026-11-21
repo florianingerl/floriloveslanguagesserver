@@ -33,6 +33,7 @@
     "test:whiteboard": "ts-node src/whiteboard/boardLogic.test.ts",
     "test:threeinarow:smoke": "ts-node scripts/threeinarow-smoke.ts",
     "test:imagelimit": "ts-node src/helpers/imageLimit.test.ts",
+    "test:imagedrawing": "ts-node src/helpers/imageDrawing.test.ts",
     "test:exportfacilebody": "ts-node src/helpers/exportFacileBody.test.ts",
     "test:ownership": "ts-node src/helpers/ownership.test.ts",
     "test:programming": "ts-node src/helpers/programmingRunner.test.ts",
